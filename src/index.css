@@ -11,18 +11,16 @@ body,
   overflow: hidden;
 }
 
+body {
+  max-width: 1560px;
+  margin: 0 auto;
+}
+
 :root {
   --primary-bg-color: #ffffff;
   --primary-border-color: #cbd5e1;
-  --primary-btn-color: #17214bd2;
+  --primary-btn-color: #005295;
+  --primary-side-color: #005295;
+  --hint-text-color: #7a95ab;
 }
 
-@layer components {
-  .input {
-    @apply w-full rounded border border-stone-300 p-1 duration-300 focus:scale-105 focus:outline-0;
-  }
-
-  .label {
-    @apply font-semibold;
-  }
-}
