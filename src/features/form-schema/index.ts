@@ -5,11 +5,7 @@ export type {
   FormField,
   FormSchema,
 } from "./types";
-export {
-  FIELD_TYPES,
-  INPUT_FIELD_TYPES,
-  OPTION_FIELD_TYPES,
-} from "./types";
+export { INPUT_FIELD_TYPES, OPTION_FIELD_TYPES } from "./types";
 export {
   FIELD_CATALOG,
   getCatalogField,

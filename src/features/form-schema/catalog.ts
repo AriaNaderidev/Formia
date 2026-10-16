@@ -1,183 +1,92 @@
-import type { FormField } from "./types";
+import type { FieldType, FormField } from "./types";
 
-export const paletteId = (type: FormField["type"]) => `palette:${type}`;
+export const paletteId = (type: FieldType) => `palette:${type}`;
 
 export const isPaletteId = (id: string | number) =>
   String(id).startsWith("palette:");
 
+/* ---------- shared defaults ---------- */
+
+const BASE = { defaultValue: "", disabled: false, className: "" } as const;
+const LAYOUT_BASE = { className: "" } as const;
+
+const REQUIRED = { required: true };
+const TEXT_RULES = { required: true, useMinLength: false, useMaxLength: false };
+const NUMBER_RULES = { ...TEXT_RULES, useMin: false, useMax: false };
+
+type FieldDraft = Omit<FormField, "id" | "type">;
+
+const field = (type: FieldType, draft: FieldDraft): FormField => ({
+  id: paletteId(type),
+  type,
+  ...draft,
+});
+
+/* ---------- catalog ---------- */
+
 export const FIELD_CATALOG: FormField[] = [
-  {
-    id: paletteId("text"),
+  /* Text */
+  field("text", {
+    ...BASE,
     name: "Text",
-    type: "text",
     label: "Username",
-    defaultValue: "",
-    disabled: false,
-    className: "",
-    validation: {
-      required: true,
-      useMinLength: false,
-      useMaxLength: false,
-    },
-  },
-  {
-    id: paletteId("number"),
+    validation: TEXT_RULES,
+  }),
+  field("textarea", {
+    ...BASE,
+    name: "Textarea",
+    label: "Bio",
+    rowNumber: 3,
+    validation: TEXT_RULES,
+  }),
+  field("number", {
+    ...BASE,
     name: "Number",
-    type: "number",
     label: "Age",
-    defaultValue: "",
-    disabled: false,
-    className: "",
-    validation: {
-      required: true,
-      useMinLength: false,
-      useMaxLength: false,
-      useMin: false,
-      useMax: false,
-    },
-  },
-  {
-    id: paletteId("date"),
-    name: "Date",
-    type: "date",
-    label: "Date of birth",
-    defaultValue: "",
-    disabled: false,
-    className: "",
-    validation: { required: true },
-  },
-  {
-    id: paletteId("email"),
+    validation: NUMBER_RULES,
+  }),
+  field("email", {
+    ...BASE,
     name: "Email",
-    type: "email",
     label: "Email",
-    defaultValue: "",
-    disabled: false,
-    className: "",
-    validation: { required: true },
-  },
-  {
-    id: paletteId("tel"),
+    validation: REQUIRED,
+  }),
+  field("tel", {
+    ...BASE,
     name: "Tel",
-    type: "tel",
     label: "Phone",
-    defaultValue: "",
-    disabled: false,
-    className: "",
-    validation: {
-      required: true,
-      useMinLength: false,
-      useMaxLength: false,
-    },
-  },
-  {
-    id: paletteId("time"),
-    name: "Time",
-    type: "time",
-    label: "Select a time",
-    defaultValue: "",
-    disabled: false,
-    className: "",
-    validation: { required: true },
-  },
-  {
-    id: paletteId("color"),
-    name: "Color",
-    type: "color",
-    label: "Pick a color",
-    defaultValue: "#000000",
-    disabled: false,
-    className: "",
-    validation: { required: true },
-  },
-  {
-    id: paletteId("file"),
-    name: "File",
-    type: "file",
-    label: "Select your file",
-    defaultValue: "",
-    disabled: false,
-    className: "",
-    validation: { required: true },
-  },
-  {
-    id: paletteId("checkbox"),
-    name: "Checkbox",
-    type: "checkbox",
-    label: "I agree to the terms",
-    defaultValue: false,
-    disabled: false,
-    className: "",
-    validation: { required: true },
-  },
-  {
-    id: paletteId("password"),
+    validation: TEXT_RULES,
+  }),
+  field("url", {
+    ...BASE,
+    name: "Url",
+    label: "Website",
+    validation: REQUIRED,
+  }),
+  field("password", {
+    ...BASE,
     name: "Password",
-    type: "password",
     label: "Password",
-    defaultValue: "",
-    disabled: false,
-    className: "",
-    validation: {
-      required: true,
-      useMinLength: false,
-      useMaxLength: false,
-    },
-  },
-  {
-    id: paletteId("select"),
+    validation: TEXT_RULES,
+  }),
+
+  /* Choice */
+  field("select", {
+    ...BASE,
     name: "Select",
-    type: "select",
     label: "Email",
-    defaultValue: "",
-    disabled: false,
-    className: "",
-    validation: { required: true },
+    validation: REQUIRED,
     options: [
       { label: "aria45@gmail.com", value: "aria45@gmail.com" },
       { label: "test@gmail.com", value: "test@gmail.com" },
       { label: "mmd88@gmail.com", value: "mmd88@gmail.com" },
     ],
-  },
-  {
-    id: paletteId("textarea"),
-    name: "Textarea",
-    type: "textarea",
-    label: "Bio",
-    defaultValue: "",
-    disabled: false,
-    className: "",
-    rowNumber: 3,
-    validation: {
-      required: true,
-      useMinLength: false,
-      useMaxLength: false,
-    },
-  },
-  {
-    id: paletteId("radiogroup"),
-    name: "Radiogroup",
-    type: "radiogroup",
-    label: "Gender",
-    defaultValue: "",
-    disabled: false,
-    className: "",
-    validation: { required: true },
-    options: [
-      { label: "Female", value: "female" },
-      { label: "Male", value: "male" },
-      { label: "Other", value: "other" },
-    ],
-  },
-  {
-    id: paletteId("combobox"),
+  }),
+  field("combobox", {
+    ...BASE,
     name: "Combobox",
-    type: "combobox",
     label: "Language",
-    defaultValue: "",
-    disabled: false,
-    className: "",
-    validation: { required: true },
+    validation: REQUIRED,
     options: [
       { label: "Persian", value: "Persian" },
       { label: "English (US)", value: "English(US)" },
@@ -186,8 +95,163 @@ export const FIELD_CATALOG: FormField[] = [
       { label: "French", value: "French" },
       { label: "German", value: "German" },
     ],
-  },
+  }),
+  field("multiselect", {
+    ...BASE,
+    name: "Multiselect",
+    label: "Interests",
+    defaultValue: [],
+    validation: REQUIRED,
+    options: [
+      { label: "Design", value: "design" },
+      { label: "Development", value: "development" },
+      { label: "Music", value: "music" },
+    ],
+  }),
+  field("radiogroup", {
+    ...BASE,
+    name: "Radiogroup",
+    label: "Gender",
+    validation: REQUIRED,
+    options: [
+      { label: "Female", value: "female" },
+      { label: "Male", value: "male" },
+      { label: "Other", value: "other" },
+    ],
+  }),
+  field("checkbox", {
+    ...BASE,
+    name: "Checkbox",
+    label: "I agree to the terms",
+    defaultValue: false,
+    validation: REQUIRED,
+  }),
+  field("checkboxgroup", {
+    ...BASE,
+    name: "Checkboxgroup",
+    label: "Notifications",
+    defaultValue: [],
+    validation: REQUIRED,
+    options: [
+      { label: "Email", value: "email" },
+      { label: "SMS", value: "sms" },
+      { label: "Push", value: "push" },
+    ],
+  }),
+  field("switch", {
+    ...BASE,
+    name: "Switch",
+    label: "Enable notifications",
+    defaultValue: false,
+    validation: { required: false },
+  }),
+
+  /* Date & time */
+  field("date", {
+    ...BASE,
+    name: "Date",
+    label: "Date of birth",
+    validation: REQUIRED,
+  }),
+  field("time", {
+    ...BASE,
+    name: "Time",
+    label: "Select a time",
+    validation: REQUIRED,
+  }),
+  field("datetime", {
+    ...BASE,
+    name: "Datetime",
+    label: "Appointment",
+    validation: REQUIRED,
+  }),
+
+  /* Rich inputs */
+  field("slider", {
+    ...BASE,
+    name: "Slider",
+    label: "Budget",
+    defaultValue: 50,
+    min: 0,
+    max: 100,
+    step: 1,
+    validation: { required: false },
+  }),
+  field("rating", {
+    ...BASE,
+    name: "Rating",
+    label: "How was your experience?",
+    defaultValue: 0,
+    max: 5,
+    validation: REQUIRED,
+  }),
+  field("color", {
+    ...BASE,
+    name: "Color",
+    label: "Pick a color",
+    defaultValue: "#000000",
+    validation: REQUIRED,
+  }),
+  field("file", {
+    ...BASE,
+    name: "File",
+    label: "Select your file",
+    validation: REQUIRED,
+  }),
+
+  /* Layout (containers + spacing) */
+  field("grid", {
+    ...LAYOUT_BASE,
+    name: "Grid",
+    columns: 2,
+    spacing: 2,
+    children: [],
+  }),
+  field("section", {
+    ...LAYOUT_BASE,
+    name: "Section",
+    label: "Section title",
+    description: "",
+    children: [],
+  }),
+  field("divider", { ...LAYOUT_BASE, name: "Divider" }),
+  field("spacer", { ...LAYOUT_BASE, name: "Spacer", height: 24 }),
+
+  /* Content */
+  field("heading", {
+    ...LAYOUT_BASE,
+    name: "Heading",
+    content: "Heading",
+    headingLevel: "h2",
+  }),
+  field("paragraph", {
+    ...LAYOUT_BASE,
+    name: "Paragraph",
+    content: "Add helpful context for the person filling out this form.",
+  }),
+  field("alert", {
+    ...LAYOUT_BASE,
+    name: "Alert",
+    content: "Important information goes here.",
+    severity: "info",
+  }),
+  field("image", {
+    ...LAYOUT_BASE,
+    name: "Image",
+    src: "",
+    alt: "",
+    height: 160,
+  }),
+
+  /* Actions */
+  field("button", {
+    ...LAYOUT_BASE,
+    name: "Button",
+    label: "Submit",
+    buttonType: "submit",
+    buttonVariant: "contained",
+  }),
 ];
 
 export const getCatalogField = (id: string) =>
-  FIELD_CATALOG.find((field) => field.id === id);
+  FIELD_CATALOG.find((f) => f.id === id);

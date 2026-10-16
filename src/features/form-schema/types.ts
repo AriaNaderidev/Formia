@@ -1,21 +1,38 @@
-export const FIELD_TYPES = [
-  "text",
-  "password",
-  "textarea",
-  "number",
-  "email",
-  "tel",
-  "date",
-  "time",
-  "color",
-  "file",
-  "checkbox",
-  "select",
-  "radiogroup",
-  "combobox",
-] as const;
+export type InputFieldType =
+  | "text"
+  | "textarea"
+  | "number"
+  | "email"
+  | "tel"
+  | "url"
+  | "password"
+  | "select"
+  | "combobox"
+  | "multiselect"
+  | "radiogroup"
+  | "checkbox"
+  | "checkboxgroup"
+  | "switch"
+  | "date"
+  | "time"
+  | "datetime"
+  | "slider"
+  | "rating"
+  | "color"
+  | "file";
 
-export type FieldType = (typeof FIELD_TYPES)[number];
+export type LayoutFieldType =
+  | "grid"
+  | "section"
+  | "divider"
+  | "spacer"
+  | "heading"
+  | "paragraph"
+  | "alert"
+  | "image"
+  | "button";
+
+export type FieldType = InputFieldType | LayoutFieldType;
 
 export type FieldOption = {
   label: string;
@@ -44,17 +61,53 @@ export type FieldValidation = {
   fileValidationMessage?: string;
 };
 
+export type FieldValue = string | boolean | number | string[];
+
+export type HeadingLevel = "h1" | "h2" | "h3" | "h4";
+export type AlertSeverity = "info" | "success" | "warning" | "error";
+export type ButtonType = "submit" | "reset" | "button";
+export type ButtonVariant = "contained" | "outlined" | "text";
+
 export type FormField = {
   id: string;
   name: string;
-  label: string;
+  /** Optional: layout and content fields (divider, spacer, grid...) have no label. */
+  label?: string;
   type: FieldType;
-  defaultValue?: string | boolean | number;
+  defaultValue?: FieldValue;
   className?: string;
   disabled?: boolean;
   options?: FieldOption[];
   rowNumber?: number;
   validation?: FieldValidation;
+
+  /** slider, rating */
+  min?: number;
+  max?: number;
+  step?: number;
+
+  /** grid, section: nested fields */
+  children?: FormField[];
+  /** grid */
+  columns?: number;
+  spacing?: number;
+  /** section */
+  description?: string;
+  /** spacer, image */
+  height?: number;
+
+  /** heading, paragraph, alert */
+  content?: string;
+  headingLevel?: HeadingLevel;
+  severity?: AlertSeverity;
+
+  /** image */
+  src?: string;
+  alt?: string;
+
+  /** button */
+  buttonType?: ButtonType;
+  buttonVariant?: ButtonVariant;
 };
 
 export type FormSchema = {
@@ -62,19 +115,30 @@ export type FormSchema = {
   fields: FormField[];
 };
 
+/** Rendered as a native <input type="..."> */
 export const INPUT_FIELD_TYPES: FieldType[] = [
   "text",
   "number",
   "date",
   "email",
   "tel",
+  "url",
   "time",
   "color",
   "file",
 ];
 
+/** Fields that need an `options` list */
 export const OPTION_FIELD_TYPES: FieldType[] = [
   "select",
   "radiogroup",
   "combobox",
+  "multiselect",
+  "checkboxgroup",
 ];
+
+/** Fields that can hold other fields in `children` */
+export const CONTAINER_FIELD_TYPES: FieldType[] = ["grid", "section"];
+
+export const isContainerField = (field: Pick<FormField, "type">) =>
+  CONTAINER_FIELD_TYPES.includes(field.type);
