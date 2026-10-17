@@ -14,7 +14,7 @@ export const DropEmptyState = () => {
   return (
     <div
       ref={setNodeRef}
-      className={`relative col-span-full flex h-full min-h-0 w-full items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed transition-colors duration-300 ${
+      className={`relative col-span-full m-1 flex min-h-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed transition-colors duration-300 ${
         isOver
           ? "border-plum bg-plum/5"
           : isDragging
@@ -33,7 +33,10 @@ export const DropEmptyState = () => {
         </div>
       )}
 
-      <div className="relative flex h-full max-h-112 min-h-0 flex-col items-center justify-center gap-4 p-6">
+      <div
+        className="relative flex h-full max-h-112 min-h-0 flex-col items-center justify-center gap-4 select-none"
+        draggable={false}
+      >
         <div
           className={`min-h-0 flex-1 transition-[scale,translate,opacity,filter] duration-300 ease-out ${
             isOver
@@ -52,7 +55,7 @@ export const DropEmptyState = () => {
 
         <p
           aria-live="polite"
-          className={`shrink-0 text-sm font-medium transition-colors duration-300 ${
+          className={`shrink-0 text-lg font-semibold transition-colors duration-300 ${
             isOver ? "text-plum" : "text-ink-muted"
           }`}
         >

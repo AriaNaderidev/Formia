@@ -6,8 +6,9 @@ import { visuallyHidden } from "@mui/utils";
 import { PaletteSearch } from "./Palettesearch";
 import { PaletteSection } from "./Palettesection";
 import { PaletteItem } from "./PaletteItem";
-import { PaletteEmptyState } from "./Paletteemptystate";
+import { PaletteEmptyState } from "./PaletteEmptyState";
 import { usePaletteGroups } from "../../hooks/usePaletteGroup";
+import { alpha } from "@mui/material";
 
 export const Palette = () => {
   const [query, setQuery] = useState("");
@@ -39,7 +40,38 @@ export const Palette = () => {
 
       <Divider />
 
-      <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", px: 2, py: 1 }}>
+      <Box
+        sx={(theme) => ({
+          flex: 1,
+          minHeight: 0,
+          overflowY: "auto",
+          px: 2,
+          py: 1,
+          scrollbarGutter: "stable",
+
+          /* Chrome, Edge, Safari */
+          "&::-webkit-scrollbar": { width: 10 },
+          "&::-webkit-scrollbar-track": { background: "transparent" },
+          "&::-webkit-scrollbar-thumb": {
+            backgroundColor: "transparent",
+            backgroundClip: "content-box",
+            border: "2px solid transparent",
+            borderRadius: 999,
+          },
+          "&:hover::-webkit-scrollbar-thumb": {
+            backgroundColor: alpha(theme.palette.primary.main, 0.25),
+          },
+          "&::-webkit-scrollbar-thumb:hover": {
+            backgroundColor: alpha(theme.palette.primary.main, 0.5),
+          },
+
+          /* Firefox (and any browser without ::-webkit-scrollbar) */
+          "@supports not selector(::-webkit-scrollbar)": {
+            scrollbarWidth: "thin",
+            scrollbarColor: `${alpha(theme.palette.primary.main, 0.35)} transparent`,
+          },
+        })}
+      >
         {groups.length === 0 ? (
           <PaletteEmptyState query={query} onClear={() => setQuery("")} />
         ) : (

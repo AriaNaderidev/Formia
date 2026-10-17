@@ -5,7 +5,7 @@ import {
   PALETTE_CATEGORIES,
   toPaletteEntry,
   type PaletteEntry,
-} from "../components/Palette/PaletteConfig ";
+} from "../components/Palette/PaletteConfig";
 
 const ENTRIES: PaletteEntry[] = FIELD_CATALOG.map(toPaletteEntry);
 

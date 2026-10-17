@@ -1,8 +1,8 @@
 import { memo } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import Tooltip from "@mui/material/Tooltip";
-import { PaletteItemView } from "./Paletteitemview";
-import type { PaletteEntry } from "./PaletteConfig ";
+import { PaletteItemView } from "./PaletteItemView";
+import type { PaletteEntry } from "./PaletteConfig";
 
 type PaletteItemProps = {
   entry: PaletteEntry;

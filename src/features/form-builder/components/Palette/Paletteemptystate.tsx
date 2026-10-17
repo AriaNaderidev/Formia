@@ -13,12 +13,12 @@ export const PaletteEmptyState = ({
 }: PaletteEmptyStateProps) => (
   <Stack spacing={1} sx={{ py: 6, textAlign: "center", alignItems: "center" }}>
     <Typography variant="body2" sx={{ fontWeight: 500 }}>
-      No fields match “{query.trim()}”
+      No fields match <span className="wrap-anywhere">“{query.trim()}”</span>
     </Typography>
     <Typography variant="body2" color="text.secondary">
       Try a broader word, like “text” or “date”.
     </Typography>
-    <Button size="small" onClick={onClear}>
+    <Button size="small" variant="contained" onClick={onClear}>
       Clear search
     </Button>
   </Stack>

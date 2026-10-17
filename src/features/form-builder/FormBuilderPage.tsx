@@ -6,7 +6,7 @@ import { useFormBuilderDnd } from "./hooks/useFormBuilderDnd";
 import { Palette, PaletteItemPreview } from "./components/Palette";
 import { Canvas } from "./components/Canvas";
 import { PreviewPanel } from "../preview/PreviewPanel";
-import { DropEmptyState } from "./components/Palette/DropEmptyState";
+import { DropEmptyState } from "./components/DropEmptyState";
 
 export const FormBuilderPage = () => {
   const { fields, setFields, activeId, handleDragStart, handleDragEnd } =

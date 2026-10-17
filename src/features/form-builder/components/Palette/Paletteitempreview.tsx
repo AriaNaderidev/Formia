@@ -1,6 +1,6 @@
 import { getCatalogField } from "@/features/form-schema";
-import { PaletteItemView } from "./Paletteitemview";
-import { toPaletteEntry } from "./PaletteConfig ";
+import { PaletteItemView } from "./PaletteItemView";
+import { toPaletteEntry } from "./PaletteConfig";
 
 type PaletteItemPreviewProps = {
   id: string;
@@ -10,6 +10,8 @@ type PaletteItemPreviewProps = {
 export const PaletteItemPreview = ({ id }: PaletteItemPreviewProps) => {
   const field = getCatalogField(id);
   if (!field) return null;
+
+  console.log(field);
 
   return <PaletteItemView entry={toPaletteEntry(field)} overlay />;
 };

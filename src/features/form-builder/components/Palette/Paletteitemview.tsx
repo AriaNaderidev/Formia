@@ -1,7 +1,7 @@
 import { forwardRef, type HTMLAttributes } from "react";
 import { alpha, styled } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
-import type { PaletteEntry } from "./PaletteConfig ";
+import type { PaletteEntry } from "./PaletteConfig";
 
 const Tile = styled("div", {
   shouldForwardProp: (prop) => prop !== "dragging" && prop !== "overlay",

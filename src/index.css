@@ -1,7 +1,6 @@
 @import "tailwindcss";
 
 /* ---------- font ---------- */
-/* Path is relative to THIS file: src/index.css -> src/assets/fonts/ */
 @font-face {
   font-family: "Inter";
   src: url("./assets/fonts/InterVariable.woff2") format("woff2");

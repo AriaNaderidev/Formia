@@ -1,2 +1,2 @@
 export { Palette } from "./Palette";
-export { PaletteItemPreview } from "./Paletteitempreview";
+export { PaletteItemPreview } from "./PaletteItemPreview";
