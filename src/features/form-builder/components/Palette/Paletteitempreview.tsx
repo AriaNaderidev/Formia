@@ -11,7 +11,5 @@ export const PaletteItemPreview = ({ id }: PaletteItemPreviewProps) => {
   const field = getCatalogField(id);
   if (!field) return null;
 
-  console.log(field);
-
   return <PaletteItemView entry={toPaletteEntry(field)} overlay />;
 };
