@@ -14,7 +14,7 @@ export const DropEmptyState = () => {
   return (
     <div
       ref={setNodeRef}
-      className={`relative col-span-full m-1 flex min-h-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed transition-colors duration-300 ${
+      className={`relative m-1 flex min-h-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed transition-colors duration-300 ${
         isOver
           ? "border-plum bg-plum/5"
           : isDragging

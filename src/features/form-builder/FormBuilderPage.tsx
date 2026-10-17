@@ -4,9 +4,9 @@ import { isPaletteId } from "../form-schema";
 import { FormBuilderProvider } from "./context/FormBuilderProvider";
 import { useFormBuilderDnd } from "./hooks/useFormBuilderDnd";
 import { Palette, PaletteItemPreview } from "./components/Palette";
-import { Canvas } from "./components/Canvas";
 import { PreviewPanel } from "../preview/PreviewPanel";
 import { DropEmptyState } from "./components/DropEmptyState";
+import { Canvas } from "./components/Canvas/Canvas";
 
 export const FormBuilderPage = () => {
   const { fields, setFields, activeId, handleDragStart, handleDragEnd } =
@@ -21,16 +21,14 @@ export const FormBuilderPage = () => {
             <Palette />
           </div>
 
-          <main className="grid min-h-0 min-w-0 grid-cols-[minmax(0,1fr)_minmax(20rem,0.8fr)] gap-x-[10%] overflow-y-auto">
-            {fields.length > 0 ? (
-              <>
-                <Canvas />
-                <PreviewPanel />
-              </>
-            ) : (
-              <DropEmptyState />
-            )}
-          </main>
+          {fields.length > 0 ? (
+            <main className="grid min-h-0 min-w-0 grid-cols-[minmax(0,1fr)_minmax(20rem,1fr)] overflow-y-auto">
+              <Canvas />
+              <PreviewPanel />
+            </main>
+          ) : (
+            <DropEmptyState />
+          )}
         </div>
 
         <DragOverlay dropAnimation={null}>
