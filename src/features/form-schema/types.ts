@@ -81,6 +81,9 @@ export type FormField = {
   rowNumber?: number;
   validation?: FieldValidation;
 
+  /** Fields that share a rowId (and sit next to each other) render side by side. */
+  rowId?: string;
+
   /** slider, rating */
   min?: number;
   max?: number;

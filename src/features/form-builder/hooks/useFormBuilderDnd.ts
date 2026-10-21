@@ -8,6 +8,7 @@ import {
   type FieldType,
   type FormField,
 } from "../../form-schema";
+import { CANVAS_DROPPABLE_ID } from "./Dnd.config";
 
 export const useFormBuilderDnd = () => {
   const [fields, setFields] = useState<FormField[]>([]);
@@ -45,7 +46,7 @@ export const useFormBuilderDnd = () => {
       return;
     }
 
-    if (overId === "main-area") return;
+    if (overId === CANVAS_DROPPABLE_ID) return;
 
     setFields((prev) => {
       const oldIndex = prev.findIndex((field) => field.id === activeIdValue);

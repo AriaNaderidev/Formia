@@ -15,3 +15,4 @@ export {
 export { createFieldFromType, createFieldId } from "./createField";
 export { buildZodSchema } from "./buildZodSchema";
 export { toFormSchema } from "./toFormSchema";
+export * from "../form-builder/components/Canvas/Rows";

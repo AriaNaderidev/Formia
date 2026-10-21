@@ -1,8 +1,9 @@
 import { useDroppable } from "@dnd-kit/core";
 import EmptyStateImage from "@/assets/images/Empty.png";
+import { CANVAS_DROPPABLE_ID } from "../hooks/Dnd.config";
 
 export const DropEmptyState = () => {
-  const { setNodeRef, isOver, active } = useDroppable({ id: "main-area" });
+  const { setNodeRef, isOver, active } = useDroppable({ id: CANVAS_DROPPABLE_ID });
   const isDragging = Boolean(active);
 
   const caption = isOver

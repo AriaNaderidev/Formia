@@ -7,15 +7,28 @@ import { Palette, PaletteItemPreview } from "./components/Palette";
 import { PreviewPanel } from "../preview/PreviewPanel";
 import { DropEmptyState } from "./components/DropEmptyState";
 import { Canvas } from "./components/Canvas/Canvas";
+import {
+  formBuilderCollision,
+  restrictReorderToYAxis,
+  useFormBuilderSensors,
+} from "./hooks/Dnd.config";
 
 export const FormBuilderPage = () => {
   const { fields, setFields, activeId, handleDragStart, handleDragEnd } =
     useFormBuilderDnd();
   const [formData, setFormData] = useState<Record<string, unknown>>({});
 
+  const sensors = useFormBuilderSensors();
+
   return (
     <FormBuilderProvider value={{ fields, setFields, formData, setFormData }}>
-      <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={formBuilderCollision}
+        modifiers={[restrictReorderToYAxis]}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
         <div className="grid h-full min-h-0 grid-cols-[15rem_minmax(0,1fr)]">
           <div className="min-h-0 overflow-hidden">
             <Palette />
