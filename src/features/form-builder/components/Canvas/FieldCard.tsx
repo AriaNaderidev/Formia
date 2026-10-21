@@ -1,10 +1,9 @@
 import { memo, useCallback, useState } from "react";
 import type { FormField } from "@/features/form-schema";
-import { Modal } from "@/shared/ui/Modal";
 import { useFormBuilderContext } from "../../context/useFormBuilderContext";
-import { FieldEditForm } from "../FieldEditForm";
-import { PALETTE_META } from "../Palette/PaletteConfig"; // adjust to your file name
 import { FieldActions } from "./FieldActions";
+import { FieldEditDialog } from "../FieldEditor/FieldEditDialog";
+import { PALETTE_META } from "../Palette/palette_config";
 
 type FieldCardProps = {
   field: FormField;
@@ -18,13 +17,18 @@ export const FieldCard = memo(function FieldCard({
 }: FieldCardProps) {
   const { setFields } = useFormBuilderContext();
   const [isEditOpen, setIsEditOpen] = useState(false);
+  // The dialog (and its form) is only created after the first time it is opened.
+  const [hasOpened, setHasOpened] = useState(false);
 
   const meta = PALETTE_META[field.type];
   const Icon = meta.icon;
   const title = field.label || meta.title;
   const isRequired = Boolean(field.validation?.required);
 
-  const openEditor = useCallback(() => setIsEditOpen(true), []);
+  const openEditor = useCallback(() => {
+    setHasOpened(true);
+    setIsEditOpen(true);
+  }, []);
   const closeEditor = useCallback(() => setIsEditOpen(false), []);
   const deleteField = useCallback(
     () => setFields((prev) => prev.filter((item) => item.id !== field.id)),
@@ -70,9 +74,13 @@ export const FieldCard = memo(function FieldCard({
         />
       </div>
 
-      <Modal isOpen={isEditOpen} onClose={closeEditor}>
-        <FieldEditForm source={field} onClose={closeEditor} />
-      </Modal>
+      {hasOpened ? (
+        <FieldEditDialog
+          field={field}
+          open={isEditOpen}
+          onClose={closeEditor}
+        />
+      ) : null}
     </>
   );
 });

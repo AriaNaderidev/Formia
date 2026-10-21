@@ -5,11 +5,10 @@ import type {
 } from "@dnd-kit/core";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import type { FormField } from "@/features/form-schema";
-import { Modal } from "@/shared/ui/Modal";
-import { useFormBuilderContext } from "../../context/useFormBuilderContext";
-import { FieldEditForm } from "../FieldEditForm";
-import { PALETTE_META } from "../Palette/PaletteConfig";
+import { useFormBuilderContext } from "@/features/form-builder/context/useFormBuilderContext";
+import { PALETTE_META } from "../Palette/palette_config";
 import { FieldActions } from "./FieldActions";
+import { FieldEditDialog } from "../FieldEditor/FieldEditDialog";
 
 type FieldRowProps = {
   field: FormField;
@@ -30,13 +29,14 @@ export const FieldRow = memo(function FieldRow({
   field,
   isDragging,
   isMenuOpen,
-
   setActivatorNodeRef,
   attributes,
   listeners,
 }: FieldRowProps) {
   const { setFields } = useFormBuilderContext();
   const [isEditOpen, setIsEditOpen] = useState(false);
+  // The dialog (and its form) is only created after the first time it is opened.
+  const [hasOpened, setHasOpened] = useState(false);
 
   const meta = PALETTE_META[field.type];
   const Icon = meta.icon;
@@ -44,12 +44,16 @@ export const FieldRow = memo(function FieldRow({
   const isRequired = Boolean(field.validation?.required);
   const isActive = isEditOpen || isMenuOpen;
 
-  const openEditor = useCallback(() => setIsEditOpen(true), []);
+  const openEditor = useCallback(() => {
+    setHasOpened(true);
+    setIsEditOpen(true);
+  }, []);
   const closeEditor = useCallback(() => setIsEditOpen(false), []);
   const deleteField = useCallback(
     () => setFields((prev) => prev.filter((item) => item.id !== field.id)),
     [setFields, field.id],
   );
+
   const cardState = isDragging
     ? "border-plum shadow-lg"
     : isActive
@@ -103,9 +107,13 @@ export const FieldRow = memo(function FieldRow({
         />
       </div>
 
-      <Modal isOpen={isEditOpen} onClose={closeEditor}>
-        <FieldEditForm source={field} onClose={closeEditor} />
-      </Modal>
+      {hasOpened ? (
+        <FieldEditDialog
+          field={field}
+          open={isEditOpen}
+          onClose={closeEditor}
+        />
+      ) : null}
     </>
   );
 });

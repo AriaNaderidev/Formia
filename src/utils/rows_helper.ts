@@ -1,5 +1,5 @@
-import type { FormField } from "@/features/form-schema";
 import { arrayMove } from "@dnd-kit/sortable";
+import type { FormField } from "@/features/form-schema";
 
 export const MAX_FIELDS_PER_ROW = 2;
 
@@ -94,4 +94,27 @@ export const moveRow = (
   if (from === -1 || to === -1 || from === to) return fields;
 
   return arrayMove(rows, from, to).flatMap((row) => row.fields);
+};
+
+/**
+ * Safety net: brings the list into the canonical shape.
+ *  - a row of two shares a rowId equal to its first field's id
+ *  - a row of one has no rowId
+ * Row keys are therefore always unique, even if some code path split a pair apart.
+ * Returns the same array (and the same field objects) when nothing needs fixing.
+ */
+export const normalizeRows = (fields: FormField[]): FormField[] => {
+  let changed = false;
+
+  const next = groupIntoRows(fields).flatMap((row) => {
+    const rowId = row.fields.length > 1 ? row.fields[0].id : undefined;
+
+    return row.fields.map((field) => {
+      if (field.rowId === rowId) return field;
+      changed = true;
+      return { ...field, rowId };
+    });
+  });
+
+  return changed ? next : fields;
 };

@@ -1,8 +1,8 @@
 import { memo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { FieldRow } from "./Rows";
 import { RowContent } from "./RowContent";
+import type { FieldRow } from "@/utils/rows_helper";
 
 type CanvasRowProps = {
   row: FieldRow;
@@ -44,7 +44,6 @@ export const CanvasRow = memo(function CanvasRow({
       <RowContent
         row={row}
         isDragging={isDragging}
-        isBelowOpen={openMenuKey === `${row.key}:below`}
         isBesideOpen={openMenuKey === `${row.key}:beside`}
         setOpenMenuKey={setOpenMenuKey}
         setActivatorNodeRef={setActivatorNodeRef}

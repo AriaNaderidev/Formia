@@ -1,6 +1,11 @@
-import { useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
-import { arrayMove } from "@dnd-kit/sortable";
 import {
   createFieldFromType,
   getCatalogField,
@@ -8,12 +13,28 @@ import {
   type FieldType,
   type FormField,
 } from "../../form-schema";
-import { CANVAS_DROPPABLE_ID } from "./Dnd.config";
+import {
+  insertFieldAfterRow,
+  moveRow,
+  normalizeRows,
+} from "@/utils/rows_helper";
+import { CANVAS_DROPPABLE_ID } from "./dnd_config";
 
 export const useFormBuilderDnd = () => {
-  const [fields, setFields] = useState<FormField[]>([]);
+  const [fields, setRawFields] = useState<FormField[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+
+  // Every write (drag, insert, delete, edit) passes through normalizeRows,
+  // so a pair of fields can never end up split with a duplicated rowId.
+  const setFields = useCallback<Dispatch<SetStateAction<FormField[]>>>(
+    (action) => {
+      setRawFields((prev) =>
+        normalizeRows(typeof action === "function" ? action(prev) : action),
+      );
+    },
+    [],
+  );
 
   useEffect(() => {
     document.body.style.cursor = isDragging ? "grabbing" : "auto";
@@ -34,26 +55,27 @@ export const useFormBuilderDnd = () => {
     const { over, active } = event;
     if (!over) return;
 
-    const activeIdValue = String(active.id);
-    const overId = String(over.id);
+    // For canvas rows, both ids are ROW keys, not field ids.
+    const activeKey = String(active.id);
+    const overKey = String(over.id);
 
-    if (isPaletteId(activeIdValue)) {
-      const catalogField = getCatalogField(activeIdValue);
+    // New field from the palette: below the hovered row, or at the end.
+    if (isPaletteId(activeKey)) {
+      const catalogField = getCatalogField(activeKey);
       if (!catalogField) return;
 
       const nextField = createFieldFromType(catalogField.type as FieldType);
-      setFields((prev) => [...prev, nextField]);
+      setFields((prev) =>
+        overKey === CANVAS_DROPPABLE_ID
+          ? [...prev, nextField]
+          : insertFieldAfterRow(prev, nextField, overKey),
+      );
       return;
     }
 
-    if (overId === CANVAS_DROPPABLE_ID) return;
-
-    setFields((prev) => {
-      const oldIndex = prev.findIndex((field) => field.id === activeIdValue);
-      const newIndex = prev.findIndex((field) => field.id === overId);
-      if (oldIndex === -1 || newIndex === -1) return prev;
-      return arrayMove(prev, oldIndex, newIndex);
-    });
+    // Reorder: move the whole row so pairs stay together.
+    if (overKey === CANVAS_DROPPABLE_ID || activeKey === overKey) return;
+    setFields((prev) => moveRow(prev, activeKey, overKey));
   };
 
   return {

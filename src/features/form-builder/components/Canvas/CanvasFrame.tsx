@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { useDndContext, useDroppable } from "@dnd-kit/core";
 import { isPaletteId } from "@/features/form-schema";
-import { CANVAS_DROPPABLE_ID } from "../../hooks/Dnd.config";
+import { CANVAS_DROPPABLE_ID } from "@/features/form-builder/hooks/dnd_config";
 
 type CanvasFrameProps = {
   count: number;

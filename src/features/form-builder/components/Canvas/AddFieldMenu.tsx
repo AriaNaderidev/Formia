@@ -11,36 +11,21 @@ import {
   createFieldFromType,
   insertField,
   type FieldType,
-} from "../../form-schema";
-import { useFormBuilderContext } from "../context/useFormBuilderContext";
-import { usePaletteGroups } from "../hooks/usePaletteGroup";
+} from "../../../form-schema";
+import { useFormBuilderContext } from "../../context/useFormBuilderContext";
+import { usePaletteGroups } from "../../hooks/usePaletteGroup";
 
 type AddFieldMenuProps = {
   /** Field the new one is inserted relative to. */
   anchorId: string;
-  placement: "below" | "beside";
   onClose: () => void;
 };
-
-const HORIZONTAL_POSITION = {
-  below: "left-1/2 -translate-x-1/2",
-  beside: "start-0",
-} as const;
-
-const CONTEXT_LABEL = {
-  below: "Adding below this row",
-  beside: "Adding beside this field",
-} as const;
 
 /**
  * Dropdown for choosing which field to insert.
  * Must be rendered inside a `relative` element that wraps the "+" button.
  */
-export const AddFieldMenu = ({
-  anchorId,
-  placement,
-  onClose,
-}: AddFieldMenuProps) => {
+export const AddFieldMenu = ({ anchorId, onClose }: AddFieldMenuProps) => {
   const { setFields } = useFormBuilderContext();
   const [query, setQuery] = useState("");
   const { groups } = usePaletteGroups(query);
@@ -62,11 +47,11 @@ export const AddFieldMenu = ({
     (type: FieldType) => {
       const nextField = createFieldFromType(type);
       setFields((prev) =>
-        insertField(prev, nextField, { anchorId, placement }),
+        insertField(prev, nextField, { anchorId, placement: "beside" }),
       );
       onClose();
     },
-    [anchorId, placement, onClose, setFields],
+    [anchorId, onClose, setFields],
   );
 
   return (
@@ -75,9 +60,9 @@ export const AddFieldMenu = ({
       elevation={8}
       role="dialog"
       aria-label="Add a field"
-      className={`absolute z-10 w-64 overflow-hidden ${
+      className={`absolute start-0 z-10 w-64 overflow-hidden ${
         openUp ? "bottom-full mb-2" : "top-full mt-2"
-      } ${HORIZONTAL_POSITION[placement]}`}
+      }`}
       sx={{ border: 1, borderColor: "divider", borderRadius: 1.5 }}
     >
       <div className="border-line border-b p-2">
@@ -86,7 +71,7 @@ export const AddFieldMenu = ({
           color="text.secondary"
           sx={{ display: "block", px: 0.5, pb: 0.75 }}
         >
-          {CONTEXT_LABEL[placement]}
+          Adding beside this field
         </Typography>
         <OutlinedInput
           autoFocus

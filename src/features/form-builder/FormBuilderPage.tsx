@@ -11,7 +11,7 @@ import {
   formBuilderCollision,
   restrictReorderToYAxis,
   useFormBuilderSensors,
-} from "./hooks/Dnd.config";
+} from "./hooks/dnd_config";
 
 export const FormBuilderPage = () => {
   const { fields, setFields, activeId, handleDragStart, handleDragEnd } =

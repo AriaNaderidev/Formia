@@ -3,14 +3,13 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { useFormBuilderContext } from "../../context/useFormBuilderContext";
+import { useFormBuilderContext } from "@/features/form-builder/context/useFormBuilderContext";
 import { CanvasFrame } from "./CanvasFrame";
-import { groupIntoRows } from "./Rows";
 import { CanvasRow } from "./CanvasRow";
+import { groupIntoRows } from "@/utils/rows_helper";
 
 export const Canvas = () => {
   const { fields } = useFormBuilderContext();
-  // "<rowKey>:below" or "<rowKey>:beside". Only one insert menu is open at a time.
   const [openMenuKey, setOpenMenuKey] = useState<string | null>(null);
 
   const rows = useMemo(() => groupIntoRows(fields), [fields]);
