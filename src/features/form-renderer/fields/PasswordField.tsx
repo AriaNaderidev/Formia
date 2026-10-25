@@ -1,8 +1,8 @@
 import { useState } from "react";
 import type { UseFormRegisterReturn } from "react-hook-form";
-import { MdVisibility, MdVisibilityOff } from "react-icons/md";
 import type { FormField } from "../../form-schema";
 import { fieldClass, labelClass } from "./fieldStyles";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 type Props = {
   field: FormField;
@@ -30,7 +30,7 @@ export const PasswordField = ({ field, hasError, registerProps }: Props) => {
           onClick={() => setVisible((value) => !value)}
           aria-label={visible ? "Hide password" : "Show password"}
         >
-          {visible ? <MdVisibilityOff /> : <MdVisibility />}
+          {visible ? <VisibilityOff /> : <Visibility />}
         </button>
       </span>
     </label>

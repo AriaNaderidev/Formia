@@ -1,4 +1,4 @@
-import { HiOutlineClipboardCopy } from "react-icons/hi";
+import { ContentCopyRounded } from "@mui/icons-material";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
@@ -25,7 +25,7 @@ export const CodeBlock = ({ value }: CodeBlockProps) => {
         onClick={handleCopy}
         aria-label="Copy JSON"
       >
-        <HiOutlineClipboardCopy />
+        <ContentCopyRounded />
       </button>
       <span className="h-full w-full">
         <SyntaxHighlighter language="json" style={oneDark}>
