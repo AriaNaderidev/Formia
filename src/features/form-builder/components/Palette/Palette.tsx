@@ -6,9 +6,9 @@ import { visuallyHidden } from "@mui/utils";
 import { PaletteItem } from "./PaletteItem";
 import { usePaletteGroups } from "../../hooks/usePaletteGroup";
 import { alpha } from "@mui/material";
-import { PaletteSearch } from "./PaletteSearch";
-import { PaletteEmptyState } from "./PaletteEmptyState";
-import { PaletteSection } from "./PaletteSection";
+import { PaletteSearch } from "./Palettesearch";
+import { PaletteEmptyState } from "./Paletteemptystate";
+import { PaletteSection } from "./Palettesection";
 
 export const Palette = () => {
   const [query, setQuery] = useState("");

@@ -2,7 +2,7 @@ import { memo } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import Tooltip from "@mui/material/Tooltip";
 import type { PaletteEntry } from "./palette_config";
-import { PaletteItemView } from "./PaletteItemView";
+import { PaletteItemView } from "./Paletteitemview";
 
 type PaletteItemProps = {
   entry: PaletteEntry;
