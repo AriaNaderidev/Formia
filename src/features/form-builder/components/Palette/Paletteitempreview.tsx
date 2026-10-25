@@ -1,5 +1,5 @@
 import { getCatalogField } from "@/features/form-schema";
-import { PaletteItemView } from "./PaletteItemView";
+import { PaletteItemView } from "./Paletteitemview";
 import { toPaletteEntry } from "./palette_config";
 
 type PaletteItemPreviewProps = {
