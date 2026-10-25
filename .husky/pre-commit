@@ -1,0 +1,5 @@
+echo "--- Running pre-commit checks ---"
+
+npx lint-staged || { echo "❌ lint-staged failed. Fix your code and try again."; exit 1; }
+
+echo "✅ Pre-commit checks passed!"

@@ -2,9 +2,9 @@ import { useState } from "react";
 import { FormRenderer } from "../form-renderer";
 import { toFormSchema } from "../form-schema";
 import { useFormBuilderContext } from "../form-builder/context/useFormBuilderContext";
-import { CodeBlock } from "../../shared/ui/CodeBlock";
 import { PreviewTabs, Tab } from "./tabs/PreviewTabs";
 import { usePreviewTabs } from "./tabs/usePreviewTabs";
+import { CodeBlock } from "@/ui/CodeBlock";
 
 const TabsList = () => (
   <div className="flex h-10 w-50 items-center justify-evenly rounded-md bg-[#e6e6e6] p-2 text-sm text-gray-500">

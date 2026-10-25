@@ -27,8 +27,6 @@ import TitleIcon from "@mui/icons-material/Title";
 import ToggleOnOutlinedIcon from "@mui/icons-material/ToggleOnOutlined";
 import TuneIcon from "@mui/icons-material/Tune";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
-import ViewAgendaOutlinedIcon from "@mui/icons-material/ViewAgendaOutlined";
-import ViewColumnIcon from "@mui/icons-material/ViewColumn";
 import type { FieldType, FormField } from "@/features/form-schema";
 
 /* ---------- categories (display order) ---------- */
@@ -185,18 +183,6 @@ export const PALETTE_META: Record<FieldType, PaletteMeta> = {
     icon: UploadFileIcon,
   },
 
-  grid: {
-    title: "Columns",
-    description: "Place fields side by side",
-    category: "layout",
-    icon: ViewColumnIcon,
-  },
-  section: {
-    title: "Section",
-    description: "Group related fields under a title",
-    category: "layout",
-    icon: ViewAgendaOutlinedIcon,
-  },
   divider: {
     title: "Divider",
     description: "A line between groups of fields",

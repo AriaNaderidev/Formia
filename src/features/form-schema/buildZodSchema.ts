@@ -1,5 +1,10 @@
 import { z, type ZodTypeAny } from "zod";
 import type { FormField } from "./types";
+import {
+  getTemporalError,
+  isTemporalType,
+  type TemporalType,
+} from "./temporalBounds";
 
 export const buildZodSchema = (fields: FormField[]) => {
   const shape: Record<string, ZodTypeAny> = {};
@@ -46,7 +51,11 @@ export const buildZodSchema = (fields: FormField[]) => {
       }
     }
 
-    if (field.type !== "number" && field.type !== "checkbox" && field.type !== "file") {
+    if (
+      field.type !== "number" &&
+      field.type !== "checkbox" &&
+      field.type !== "file"
+    ) {
       if (rules.useMinLength && rules.minLength != null) {
         schema = (schema as z.ZodString).min(
           rules.minLength,
@@ -83,6 +92,17 @@ export const buildZodSchema = (fields: FormField[]) => {
           rules.maxMessage || `Maximum value is ${rules.max}`,
         );
       }
+    }
+
+    if (isTemporalType(field.type)) {
+      schema = schema.superRefine((value, ctx) => {
+        const message = getTemporalError(
+          field.type as TemporalType,
+          value as string,
+          field.validation,
+        );
+        if (message) ctx.addIssue({ code: "custom", message });
+      });
     }
 
     shape[field.id] = schema;

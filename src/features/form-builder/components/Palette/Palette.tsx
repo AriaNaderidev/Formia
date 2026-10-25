@@ -3,12 +3,12 @@ import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
 import Typography from "@mui/material/Typography";
 import { visuallyHidden } from "@mui/utils";
-import { PaletteSearch } from "./Palettesearch";
-import { PaletteSection } from "./Palettesection";
 import { PaletteItem } from "./PaletteItem";
-import { PaletteEmptyState } from "./PaletteEmptyState";
 import { usePaletteGroups } from "../../hooks/usePaletteGroup";
 import { alpha } from "@mui/material";
+import { PaletteSearch } from "./PaletteSearch";
+import { PaletteEmptyState } from "./PaletteEmptyState";
+import { PaletteSection } from "./PaletteSection";
 
 export const Palette = () => {
   const [query, setQuery] = useState("");

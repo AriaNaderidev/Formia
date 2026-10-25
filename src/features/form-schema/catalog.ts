@@ -13,6 +13,7 @@ const LAYOUT_BASE = { className: "" } as const;
 const REQUIRED = { required: true };
 const TEXT_RULES = { required: true, useMinLength: false, useMaxLength: false };
 const NUMBER_RULES = { ...TEXT_RULES, useMin: false, useMax: false };
+const TEMPORAL_RULES = { required: true, useMin: false, useMax: false };
 
 type FieldDraft = Omit<FormField, "id" | "type">;
 
@@ -151,19 +152,19 @@ export const FIELD_CATALOG: FormField[] = [
     ...BASE,
     name: "Date",
     label: "Date of birth",
-    validation: REQUIRED,
+    validation: TEMPORAL_RULES,
   }),
   field("time", {
     ...BASE,
     name: "Time",
     label: "Select a time",
-    validation: REQUIRED,
+    validation: TEMPORAL_RULES,
   }),
   field("datetime", {
     ...BASE,
     name: "Datetime",
     label: "Appointment",
-    validation: REQUIRED,
+    validation: TEMPORAL_RULES,
   }),
 
   /* Rich inputs */
@@ -200,20 +201,6 @@ export const FIELD_CATALOG: FormField[] = [
   }),
 
   /* Layout (containers + spacing) */
-  field("grid", {
-    ...LAYOUT_BASE,
-    name: "Grid",
-    columns: 2,
-    spacing: 2,
-    children: [],
-  }),
-  field("section", {
-    ...LAYOUT_BASE,
-    name: "Section",
-    label: "Section title",
-    description: "",
-    children: [],
-  }),
   field("divider", { ...LAYOUT_BASE, name: "Divider" }),
   field("spacer", { ...LAYOUT_BASE, name: "Spacer", height: 24 }),
 
