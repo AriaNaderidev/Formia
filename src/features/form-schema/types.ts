@@ -22,8 +22,6 @@ export type InputFieldType =
   | "file";
 
 export type LayoutFieldType =
-  | "grid"
-  | "section"
   | "divider"
   | "spacer"
   | "heading"
@@ -54,6 +52,8 @@ export type FieldValidation = {
   useMax?: boolean;
   max?: number;
   maxMessage?: string;
+  dateTimeEarliest?: string;
+  dateTimeLatest?: string;
   pattern?: string;
   patternMessage?: string;
   maxSize?: number;
@@ -89,13 +89,6 @@ export type FormField = {
   max?: number;
   step?: number;
 
-  /** grid, section: nested fields */
-  children?: FormField[];
-  /** grid */
-  columns?: number;
-  spacing?: number;
-  /** section */
-  description?: string;
   /** spacer, image */
   height?: number;
 
@@ -139,9 +132,3 @@ export const OPTION_FIELD_TYPES: FieldType[] = [
   "multiselect",
   "checkboxgroup",
 ];
-
-/** Fields that can hold other fields in `children` */
-export const CONTAINER_FIELD_TYPES: FieldType[] = ["grid", "section"];
-
-export const isContainerField = (field: Pick<FormField, "type">) =>
-  CONTAINER_FIELD_TYPES.includes(field.type);

@@ -1,14 +1,53 @@
 import Stack from "@mui/material/Stack";
 import { useWatch } from "react-hook-form";
+import { isTemporalType, type TemporalType } from "@/features/form-schema";
+import {
+  PATTERN_TYPES,
+  TEMPORAL_META,
+  TEXT_LENGTH_TYPES,
+} from "./editor_config";
 import { RuleCard, RuleRow } from "./RuleRow";
-import { PATTERN_TYPES, TEXT_LENGTH_TYPES } from "./editor_config";
+import { boundsOrderError } from "./editor_model";
 import { TextControl } from "./TextControl";
 import { NumberControl } from "./NumberControl";
-
 
 const REQUIRED_TITLES: Record<string, string> = {
   checkbox: "Must be checked",
   checkboxgroup: "At least one selected",
+};
+
+/** Earliest / latest limits for date, time and datetime fields. */
+const TemporalRules = ({ type }: { type: TemporalType }) => {
+  const meta = TEMPORAL_META[type];
+  const isDateTime = type === "datetime";
+
+  return (
+    <>
+      <RuleRow
+        title={`Earliest ${meta.noun}`}
+        enabledName="validation.useMin"
+        valueName="validation.dateTimeEarliest"
+        valueLabel={meta.valueLabel}
+        valueKind={meta.inputType}
+        allowToday={meta.allowToday}
+        todayHint={isDateTime ? "Counts from the start of today" : undefined}
+        // Re-check "latest" whenever "earliest" changes.
+        valueRules={{ deps: ["validation.dateTimeLatest"] }}
+        messageName="validation.minMessage"
+      />
+      <RuleRow
+        title={`Latest ${meta.noun}`}
+        enabledName="validation.useMax"
+        valueName="validation.dateTimeLatest"
+        valueLabel={meta.valueLabel}
+        valueKind={meta.inputType}
+        allowToday={meta.allowToday}
+        todayHint={isDateTime ? "Counts until the end of today" : undefined}
+        valueRules={{ validate: (_value, values) => boundsOrderError(values) }}
+        messageName="validation.maxMessage"
+      />
+    </>
+  );
 };
 
 export const ValidationPanel = () => {
@@ -21,6 +60,8 @@ export const ValidationPanel = () => {
         enabledName="validation.required"
         messageName="validation.requiredMessage"
       />
+
+      {isTemporalType(type) ? <TemporalRules type={type} /> : null}
 
       {TEXT_LENGTH_TYPES.has(type) ? (
         <>
@@ -65,7 +106,11 @@ export const ValidationPanel = () => {
           title="Custom pattern"
           description="A regular expression the value must match"
         >
-          <TextControl name="validation.pattern" label="Regex" placeholder="^[A-Za-z]+$" />
+          <TextControl
+            name="validation.pattern"
+            label="Regex"
+            placeholder="^[A-Za-z]+$"
+          />
           <TextControl
             name="validation.patternMessage"
             label="Error message"
@@ -87,7 +132,10 @@ export const ValidationPanel = () => {
             min={0}
             step={1}
           />
-          <TextControl name="validation.fileValidationMessage" label="Error message" />
+          <TextControl
+            name="validation.fileValidationMessage"
+            label="Error message"
+          />
         </RuleCard>
       ) : null}
     </Stack>

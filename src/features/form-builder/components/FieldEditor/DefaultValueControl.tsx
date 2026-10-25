@@ -1,8 +1,14 @@
 import { useWatch } from "react-hook-form";
-import type { FieldType } from "@/features/form-schema";
+import {
+  getActiveBounds,
+  isTemporalType,
+  isWithinBounds,
+  type FieldType,
+} from "@/features/form-schema";
 import { slugify } from "./editor_model";
 import { TextControl } from "./TextControl";
 import { NumberControl } from "./NumberControl";
+import { TEMPORAL_META } from "./editor_config";
 import { SwitchControl } from "./SwitchControl";
 import { SelectControl } from "./SelectControl";
 
@@ -11,6 +17,12 @@ export const DefaultValueControl = ({ type }: { type: FieldType }) => {
   const options = useWatch({ name: "options" }) ?? [];
   const min = useWatch({ name: "min" });
   const max = useWatch({ name: "max" });
+  const validation = useWatch({ name: "validation" });
+
+  // The default has to sit inside the allowed range, and the picker should show that.
+  const bounds = isTemporalType(type)
+    ? getActiveBounds(type, validation)
+    : undefined;
 
   const optionList = options
     .filter((option: any) => option.label)
@@ -34,23 +46,25 @@ export const DefaultValueControl = ({ type }: { type: FieldType }) => {
       return <NumberControl name="defaultValue" label="Default value" />;
 
     case "date":
-      return (
-        <TextControl name="defaultValue" label="Default date" type="date" />
-      );
-
     case "time":
-      return (
-        <TextControl name="defaultValue" label="Default time" type="time" />
-      );
-
-    case "datetime":
+    case "datetime": {
+      const meta = TEMPORAL_META[type];
       return (
         <TextControl
           name="defaultValue"
-          label="Default date and time"
-          type="datetime-local"
+          label={meta.defaultLabel}
+          type={meta.inputType}
+          min={bounds?.earliest}
+          max={bounds?.latest}
+          rules={{
+            validate: (value) =>
+              !value ||
+              isWithinBounds(String(value), bounds ?? {}) ||
+              "The default is outside the allowed range",
+          }}
         />
       );
+    }
 
     case "color":
       return (

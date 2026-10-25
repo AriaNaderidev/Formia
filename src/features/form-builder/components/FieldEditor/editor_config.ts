@@ -3,6 +3,7 @@ import {
   type FieldType,
   type InputFieldType,
   type LayoutFieldType,
+  type TemporalType,
 } from "@/features/form-schema";
 
 export type EditorTab = "general" | "options" | "validation";
@@ -15,8 +16,6 @@ export const TAB_LABELS: Record<EditorTab, string> = {
 
 /** Layout and content elements: they carry no value, so they have no label/name/validation. */
 const CONTENT_TYPES = new Set<FieldType>([
-  "grid",
-  "section",
   "divider",
   "spacer",
   "heading",
@@ -71,3 +70,37 @@ export const getEditorTabs = (type: FieldType): EditorTab[] => [
   ...(OPTION_FIELD_TYPES.includes(type) ? (["options"] as const) : []),
   ...(VALIDATED_TYPES.has(type) ? (["validation"] as const) : []),
 ];
+
+type TemporalMeta = {
+  inputType: "date" | "time" | "datetime-local";
+  /** Used in "Earliest <noun>" / "Latest <noun>". */
+  noun: string;
+  valueLabel: string;
+  defaultLabel: string;
+  /** "today" has no meaning for a time-only field. */
+  allowToday: boolean;
+};
+
+export const TEMPORAL_META: Record<TemporalType, TemporalMeta> = {
+  date: {
+    inputType: "date",
+    noun: "date",
+    valueLabel: "Date",
+    defaultLabel: "Default date",
+    allowToday: true,
+  },
+  time: {
+    inputType: "time",
+    noun: "time",
+    valueLabel: "Time",
+    defaultLabel: "Default time",
+    allowToday: false,
+  },
+  datetime: {
+    inputType: "datetime-local",
+    noun: "date and time",
+    valueLabel: "Date and time",
+    defaultLabel: "Default date and time",
+    allowToday: true,
+  },
+};

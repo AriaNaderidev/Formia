@@ -103,33 +103,6 @@ export const ContentSettings = ({ type }: { type: FieldType }) => {
         />
       );
 
-    case "section":
-      return (
-        <>
-          <TextControl name="label" label="Section title" />
-          <TextControl
-            name="description"
-            label="Description"
-            multiline
-            rows={2}
-          />
-        </>
-      );
-
-    case "grid":
-      return (
-        <>
-          <NumberControl name="columns" label="Columns" min={1} max={4} />
-          <NumberControl
-            name="spacing"
-            label="Gap"
-            min={0}
-            max={8}
-            helperText="In spacing units (1 unit = 8px)"
-          />
-        </>
-      );
-
     case "divider":
       return (
         <Typography variant="body2" color="text.secondary">

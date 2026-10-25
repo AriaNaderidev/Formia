@@ -8,7 +8,8 @@ import { useWatch } from "react-hook-form";
 import { NumberControl } from "./NumberControl";
 import { SwitchControl } from "./SwitchControl";
 import { TextControl } from "./TextControl";
-import type { FieldPath } from "./editor_model";
+import type { FieldPath, FieldRules } from "./editor_model";
+import { TemporalValueControl } from "./TemporalValueControl";
 
 /** Outlined container shared by every validation rule. */
 export const RuleCard = ({
@@ -41,6 +42,12 @@ type RuleRowProps = {
   /** Optional value, e.g. the minimum length itself. */
   valueName?: FieldPath;
   valueLabel?: string;
+  /** Which input edits the value. Defaults to a number input. */
+  valueKind?: "number" | "date" | "time" | "datetime-local";
+  /** Temporal values only: offer the "use today" checkbox. */
+  allowToday?: boolean;
+  todayHint?: string;
+  valueRules?: FieldRules;
   messageName: FieldPath;
 };
 
@@ -51,9 +58,14 @@ export const RuleRow = ({
   enabledName,
   valueName,
   valueLabel,
+  valueKind = "number",
+  allowToday,
+  todayHint,
+  valueRules,
   messageName,
 }: RuleRowProps) => {
   const enabled = Boolean(useWatch({ name: enabledName }));
+  const isTemporal = valueKind !== "number";
 
   return (
     <Paper variant="outlined" sx={{ px: 1.5, py: 0.75 }}>
@@ -65,10 +77,30 @@ export const RuleRow = ({
         sx={{ width: "100%", justifyContent: "space-between", mx: 0 }}
       />
       <Collapse in={enabled} unmountOnExit>
-        <Stack direction="row" spacing={1.5} sx={{ pt: 1, pb: 1 }}>
+        {/* Date inputs are wide, so they stack above the message instead of sitting beside it. */}
+        <Stack
+          direction={isTemporal ? "column" : "row"}
+          spacing={1.5}
+          sx={{ pt: 1, pb: 1 }}
+        >
           {valueName ? (
-            <Box sx={{ width: 140, flexShrink: 0 }}>
-              <NumberControl name={valueName} label={valueLabel ?? "Value"} />
+            <Box sx={isTemporal ? undefined : { width: 140, flexShrink: 0 }}>
+              {isTemporal ? (
+                <TemporalValueControl
+                  name={valueName}
+                  label={valueLabel ?? "Value"}
+                  inputType={valueKind}
+                  allowToday={allowToday}
+                  todayHint={todayHint}
+                  rules={valueRules}
+                />
+              ) : (
+                <NumberControl
+                  name={valueName}
+                  label={valueLabel ?? "Value"}
+                  rules={valueRules}
+                />
+              )}
             </Box>
           ) : null}
           <Box sx={{ flex: 1, minWidth: 0 }}>

@@ -11,6 +11,9 @@ type TextControlProps = {
   multiline?: boolean;
   rows?: number;
   rules?: FieldRules;
+  /** Native min / max, for date, time and number-like inputs. */
+  min?: string;
+  max?: string;
   /** Called on Enter instead of submitting the form (single-line inputs only). */
   onEnter?: () => void;
 };
@@ -26,6 +29,8 @@ export const TextControl = ({
   multiline,
   rows,
   rules,
+  min,
+  max,
   onEnter,
 }: TextControlProps) => {
   const { control } = useFormContext<EditorValues>();
@@ -59,6 +64,7 @@ export const TextControl = ({
       }
       slotProps={{
         inputLabel: SHRINK_TYPES.has(type) ? { shrink: true } : undefined,
+        htmlInput: { min, max },
       }}
     />
   );

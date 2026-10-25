@@ -14,6 +14,7 @@ import {
 import { TextControl } from "./TextControl";
 import { slugify, type EditorValues } from "./editor_model";
 import { DeleteOutlineOutlined } from "@mui/icons-material";
+import { alpha } from "@mui/material";
 
 type OptionRowProps = {
   index: number;
@@ -107,14 +108,46 @@ export const OptionsPanel = () => {
           </Typography>
         </Box>
       ) : (
-        fields.map((item, index) => (
-          <OptionRow
-            key={item.id}
-            index={index}
-            onAdd={addOption}
-            onRemove={() => remove(index)}
-          />
-        ))
+        <Stack
+          spacing={1.5}
+          sx={(theme) => ({
+            py: 1,
+            maxHeight: "240px",
+            overflowY: "scroll",
+            scrollbarGutter: "stable",
+
+            /* Chrome, Edge, Safari */
+            "&::-webkit-scrollbar": { width: 10 },
+            "&::-webkit-scrollbar-track": { background: "transparent" },
+            "&::-webkit-scrollbar-thumb": {
+              backgroundColor: "transparent",
+              backgroundClip: "content-box",
+              border: "2px solid transparent",
+              borderRadius: 999,
+            },
+            "&:hover::-webkit-scrollbar-thumb": {
+              backgroundColor: alpha(theme.palette.primary.main, 0.25),
+            },
+            "&::-webkit-scrollbar-thumb:hover": {
+              backgroundColor: alpha(theme.palette.primary.main, 0.5),
+            },
+
+            /* Firefox (and any browser without ::-webkit-scrollbar) */
+            "@supports not selector(::-webkit-scrollbar)": {
+              scrollbarWidth: "thin",
+              scrollbarColor: `${alpha(theme.palette.primary.main, 0.35)} transparent`,
+            },
+          })}
+        >
+          {fields.map((item, index) => (
+            <OptionRow
+              key={item.id}
+              index={index}
+              onAdd={addOption}
+              onRemove={() => remove(index)}
+            />
+          ))}
+        </Stack>
       )}
 
       {errors.options?.root?.message ? (
