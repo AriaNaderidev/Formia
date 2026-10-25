@@ -25,7 +25,6 @@ export const toEditorValues = (field: FormField): EditorValues => {
   const copy: Partial<FormField> = structuredClone(field);
   delete copy.id;
   delete copy.rowId;
-  delete copy.children;
   return copy as EditorValues;
 };
 
