@@ -7,7 +7,11 @@ export type {
   InputFieldType,
   LayoutFieldType,
 } from "./types";
-export { INPUT_FIELD_TYPES, OPTION_FIELD_TYPES } from "./types";
+export {
+  FIELD_NAME_PATTERN,
+  INPUT_FIELD_TYPES,
+  OPTION_FIELD_TYPES,
+} from "./types";
 export {
   FIELD_CATALOG,
   getCatalogField,
@@ -16,6 +20,9 @@ export {
 } from "./catalog";
 export { createFieldFromType, createFieldId } from "./createField";
 export { buildZodSchema } from "./buildZodSchema";
-export { toFormSchema } from "./toFormSchema";
+export { toFormSchema, parseFormSchema } from "./toFormSchema";
+export * from "./fieldSpec";
+export * from "./zodPlan";
+export { FORM_TEMPLATES, instantiateTemplate, type FormTemplate } from "./templates";
 export * from "@/utils/rows_helper";
 export * from "./temporalBounds";
