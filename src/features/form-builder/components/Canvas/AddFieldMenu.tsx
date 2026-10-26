@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import SearchIcon from "@mui/icons-material/Search";
 import InputAdornment from "@mui/material/InputAdornment";
 import ListItemButton from "@mui/material/ListItemButton";
@@ -10,9 +10,10 @@ import Typography from "@mui/material/Typography";
 import {
   createFieldFromType,
   insertField,
+  isFullWidth,
   type FieldType,
 } from "../../../form-schema";
-import { useFormBuilderContext } from "../../context/useFormBuilderContext";
+import { useFormBuilderActions } from "../../context/useFormBuilderContext";
 import { usePaletteGroups } from "../../hooks/usePaletteGroup";
 
 type AddFieldMenuProps = {
@@ -26,9 +27,20 @@ type AddFieldMenuProps = {
  * Must be rendered inside a `relative` element that wraps the "+" button.
  */
 export const AddFieldMenu = ({ anchorId, onClose }: AddFieldMenuProps) => {
-  const { setFields } = useFormBuilderContext();
+  const { setFields } = useFormBuilderActions();
   const [query, setQuery] = useState("");
-  const { groups } = usePaletteGroups(query);
+  const { groups: allGroups } = usePaletteGroups(query);
+  // Full-width elements (headings, dividers, alerts) can't sit beside another field.
+  const groups = useMemo(
+    () =>
+      allGroups
+        .map((group) => ({
+          ...group,
+          items: group.items.filter((item) => !isFullWidth(item.type)),
+        }))
+        .filter((group) => group.items.length > 0),
+    [allGroups],
+  );
 
   // Open upwards when there is no room below (e.g. the last row on screen).
   const paperRef = useRef<HTMLDivElement | null>(null);
@@ -45,9 +57,11 @@ export const AddFieldMenu = ({ anchorId, onClose }: AddFieldMenuProps) => {
 
   const handleAdd = useCallback(
     (type: FieldType) => {
-      const nextField = createFieldFromType(type);
       setFields((prev) =>
-        insertField(prev, nextField, { anchorId, placement: "beside" }),
+        insertField(prev, createFieldFromType(type, prev), {
+          anchorId,
+          placement: "beside",
+        }),
       );
       onClose();
     },
@@ -61,7 +75,9 @@ export const AddFieldMenu = ({ anchorId, onClose }: AddFieldMenuProps) => {
       role="dialog"
       aria-label="Add a field"
       className={`absolute start-0 z-10 w-64 overflow-hidden ${
-        openUp ? "bottom-full mb-2" : "top-full mt-2"
+        openUp
+          ? "animate-menu-up bottom-full mb-2 origin-bottom-left"
+          : "animate-menu-down top-full mt-2 origin-top-left"
       }`}
       sx={{ border: 1, borderColor: "divider", borderRadius: 1.5 }}
     >

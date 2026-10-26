@@ -6,7 +6,11 @@ import type {
 import { InsertFieldControl } from "./InsertFieldControl";
 import { RowHandle } from "./RowHandle";
 import { FieldCard } from "./FieldCard";
-import { MAX_FIELDS_PER_ROW, type FieldRow } from "@/utils/rows_helper";
+import {
+  isFullWidth,
+  MAX_FIELDS_PER_ROW,
+  type FieldRow,
+} from "@/utils/rows_helper";
 
 type RowContentProps = {
   row: FieldRow;
@@ -34,7 +38,9 @@ export const RowContent = memo(function RowContent({
 }: RowContentProps) {
   const first = row.fields[0];
   const hasPair = row.fields.length > 1;
-  const canAddBeside = row.fields.length < MAX_FIELDS_PER_ROW;
+
+  const canAddBeside =
+    row.fields.length < MAX_FIELDS_PER_ROW && !isFullWidth(first.type);
 
   return (
     <>
