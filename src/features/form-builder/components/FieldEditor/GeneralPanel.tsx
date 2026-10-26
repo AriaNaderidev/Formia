@@ -6,7 +6,7 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useWatch } from "react-hook-form";
-import { INPUT_FIELD_TYPES } from "@/features/form-schema";
+import { FIELD_NAME_PATTERN, INPUT_FIELD_TYPES } from "@/features/form-schema";
 import { PALETTE_META } from "../Palette/palette_config";
 import { useFormBuilderContext } from "../../context/useFormBuilderContext";
 import { isContentType } from "./editor_config";
@@ -46,8 +46,8 @@ export const GeneralPanel = ({ sourceId }: { sourceId: string }) => {
             rules={{
               required: "Name is required",
               pattern: {
-                value: /^[^\s.]+$/,
-                message: "No spaces or dots",
+                value: FIELD_NAME_PATTERN,
+                message: "Start with a letter; then letters, numbers, _ or -",
               },
               validate: (value) =>
                 !takenNames.has(String(value).trim()) ||
