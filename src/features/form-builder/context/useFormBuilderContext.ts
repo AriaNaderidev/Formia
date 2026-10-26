@@ -1,12 +1,19 @@
 import { useContext } from "react";
-import { FormBuilderContext } from "./formBuilderContext";
+import { FormActionsContext, FormFieldsContext } from "./formBuilderContext";
 
+const MISSING = "must be used within a FormBuilderProvider";
+
+/** setFields / getFields only. Stable: never causes a re-render. */
+export const useFormBuilderActions = () => {
+  const actions = useContext(FormActionsContext);
+  if (!actions) throw new Error(`useFormBuilderActions ${MISSING}`);
+  return actions;
+};
+
+/** Fields and actions. Re-renders on every field change. */
 export const useFormBuilderContext = () => {
-  const context = useContext(FormBuilderContext);
-  if (!context) {
-    throw new Error(
-      "useFormBuilderContext must be used within a FormBuilderProvider",
-    );
-  }
-  return context;
+  const fields = useContext(FormFieldsContext);
+  const actions = useFormBuilderActions();
+  if (!fields) throw new Error(`useFormBuilderContext ${MISSING}`);
+  return { fields, ...actions };
 };
