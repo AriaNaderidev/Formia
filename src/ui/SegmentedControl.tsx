@@ -3,6 +3,8 @@ import { useRef, type KeyboardEvent, type ReactNode } from "react";
 export type Segment<T extends string> = {
   value: T;
   label: ReactNode;
+  /** Shown instead of `label` when the control is narrower than `fullLabelFrom`. Needs a string `label`. */
+  shortLabel?: string;
   icon?: ReactNode;
   /** Optional accessible name when `label` isn't plain text. */
   ariaLabel?: string;
@@ -18,8 +20,16 @@ type SegmentedControlProps<T extends string> = {
   size?: "sm" | "md";
   /** Id prefix used to link tabs to their panels: `${idPrefix}-tab-${value}`. */
   idPrefix?: string;
+  /** Width (of the control itself, not the screen) from which full labels replace short ones. */
+  fullLabelFrom?: keyof typeof FULL_LABEL;
   className?: string;
 };
+
+// Literal class names, so Tailwind can see them.
+const FULL_LABEL = {
+  "14rem": { full: "hidden @min-[14rem]:inline", short: "@min-[14rem]:hidden" },
+  "24rem": { full: "hidden @min-[24rem]:inline", short: "@min-[24rem]:hidden" },
+} as const;
 
 /**
  * Equal-width segments with a thumb that slides to the selected one.
@@ -33,6 +43,7 @@ export function SegmentedControl<T extends string>({
   ariaLabel,
   size = "md",
   idPrefix,
+  fullLabelFrom = "24rem",
   className = "",
 }: SegmentedControlProps<T>) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -68,7 +79,7 @@ export function SegmentedControl<T extends string>({
       role={isTabs ? "tablist" : "radiogroup"}
       aria-label={ariaLabel}
       onKeyDown={onKeyDown}
-      className={`bg-plum/[0.06] relative grid rounded-xl p-1 ${className}`}
+      className={`@container bg-plum/[0.06] relative grid rounded-xl p-1 ${className}`}
       style={{ gridTemplateColumns: `repeat(${segments.length}, minmax(0, 1fr))` }}
     >
       <span
@@ -93,7 +104,9 @@ export function SegmentedControl<T extends string>({
             aria-controls={isTabs && idPrefix ? `${idPrefix}-panel-${segment.value}` : undefined}
             aria-selected={isTabs ? selected : undefined}
             aria-checked={isTabs ? undefined : selected}
-            aria-label={segment.ariaLabel}
+            aria-label={
+              segment.ariaLabel ?? (segment.shortLabel ? String(segment.label) : undefined)
+            }
             tabIndex={selected ? 0 : -1}
             onClick={() => onChange(segment.value)}
             className={`focus-visible:outline-plum relative z-10 flex min-w-0 items-center justify-center gap-1.5 rounded-lg font-medium whitespace-nowrap transition-colors duration-200 focus-visible:outline-2 ${
@@ -101,7 +114,16 @@ export function SegmentedControl<T extends string>({
             } ${selected ? "text-ink" : "text-ink-muted hover:text-ink"}`}
           >
             {segment.icon}
-            <span className="truncate">{segment.label}</span>
+            {segment.shortLabel ? (
+              <>
+                <span className={`truncate ${FULL_LABEL[fullLabelFrom].full}`}>{segment.label}</span>
+                <span aria-hidden className={`truncate ${FULL_LABEL[fullLabelFrom].short}`}>
+                  {segment.shortLabel}
+                </span>
+              </>
+            ) : (
+              <span className="truncate">{segment.label}</span>
+            )}
           </button>
         );
       })}

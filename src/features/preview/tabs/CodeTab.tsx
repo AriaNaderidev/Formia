@@ -19,9 +19,9 @@ import { CodePanel } from "./CodePanel";
 import { DownloadButton } from "./SchemaTab";
 
 const LIBRARIES = [
-  { value: "rhf" as const, label: "React Hook Form" },
+  { value: "rhf" as const, label: "React Hook Form", shortLabel: "RHF" },
   { value: "formik" as const, label: "Formik" },
-  { value: "tanstack" as const, label: "TanStack Form" },
+  { value: "tanstack" as const, label: "TanStack Form", shortLabel: "TanStack" },
 ];
 
 const LIBRARY_NOTES: Record<FormLibrary, string> = {
@@ -31,8 +31,8 @@ const LIBRARY_NOTES: Record<FormLibrary, string> = {
 };
 
 const UI_KITS = [
-  { value: "tailwind" as const, label: "Tailwind CSS" },
-  { value: "mui" as const, label: "Material UI" },
+  { value: "tailwind" as const, label: "Tailwind CSS", shortLabel: "Tailwind" },
+  { value: "mui" as const, label: "Material UI", shortLabel: "MUI" },
 ];
 
 const MANAGERS: { value: PackageManager; label: string }[] = [
@@ -131,6 +131,7 @@ const CodeTab = ({ fields, active }: { fields: FormField[]; active: boolean }) =
               size="sm"
               value={ui}
               onChange={setUi}
+              fullLabelFrom="14rem"
               segments={UI_KITS}
             />
           </div>
