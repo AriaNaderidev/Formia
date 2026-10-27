@@ -20,7 +20,13 @@ import Rating from "@mui/material/Rating";
 import Slider from "@mui/material/Slider";
 import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
-import type { FieldOption, FieldSpec, FormValue } from "@/features/form-schema";
+import {
+  getInputBounds,
+  type FieldOption,
+  type FieldSpec,
+  type FormValue,
+} from "@/features/form-schema";
+import { DateTimeField } from "@/ui/datetime/DateTimeField";
 import { FieldError } from "./FieldError";
 
 export type FormValues = Record<string, FormValue>;
@@ -37,12 +43,9 @@ const TEXT_TYPES: Record<string, string> = {
   tel: "tel",
   url: "url",
   number: "number",
-  date: "date",
-  time: "time",
-  datetime: "datetime-local",
   color: "color",
 };
-const SHRINK_TYPES = new Set(["date", "time", "datetime-local", "color"]);
+const SHRINK_TYPES = new Set(["color"]);
 
 const formatBytes = (bytes: number) =>
   bytes < 1024 * 1024
@@ -75,10 +78,7 @@ const Group = ({
   </FormControl>
 );
 
-const PasswordInput = ({
-  spec,
-  control,
-}: FieldControlProps) => {
+const PasswordInput = ({ spec, control }: FieldControlProps) => {
   const { field, fieldState } = useController({ name: spec.name, control });
   const [visible, setVisible] = useState(false);
   const error = fieldState.error?.message;
@@ -184,10 +184,14 @@ export const FieldControl = memo(function FieldControl({
             size="small"
             options={options}
             disabled={config.disabled}
-            value={options.find((option) => option.value === field.value) ?? null}
+            value={
+              options.find((option) => option.value === field.value) ?? null
+            }
             onChange={(_, option) => field.onChange(option?.value ?? "")}
             onBlur={field.onBlur}
-            isOptionEqualToValue={(option, value) => option.value === value.value}
+            isOptionEqualToValue={(option, value) =>
+              option.value === value.value
+            }
             renderInput={(params) => (
               <TextField
                 {...params}
@@ -215,9 +219,13 @@ export const FieldControl = memo(function FieldControl({
             options={options}
             disabled={config.disabled}
             value={options.filter((option) => selected.includes(option.value))}
-            onChange={(_, next) => field.onChange(next.map((option) => option.value))}
+            onChange={(_, next) =>
+              field.onChange(next.map((option) => option.value))
+            }
             onBlur={field.onBlur}
-            isOptionEqualToValue={(option, value) => option.value === value.value}
+            isOptionEqualToValue={(option, value) =>
+              option.value === value.value
+            }
             renderValue={(value, getItemProps) =>
               value.map((option, index) => {
                 const { key, ...itemProps } = getItemProps({ index });
@@ -268,7 +276,9 @@ export const FieldControl = memo(function FieldControl({
                 control={
                   <Radio
                     size="small"
-                    slotProps={{ input: { ref: index === 0 ? field.ref : undefined } }}
+                    slotProps={{
+                      input: { ref: index === 0 ? field.ref : undefined },
+                    }}
                   />
                 }
               />
@@ -289,7 +299,9 @@ export const FieldControl = memo(function FieldControl({
                 control={
                   <Checkbox
                     size="small"
-                    slotProps={{ input: { ref: index === 0 ? field.ref : undefined } }}
+                    slotProps={{
+                      input: { ref: index === 0 ? field.ref : undefined },
+                    }}
                     checked={selected.includes(option.value)}
                     onBlur={field.onBlur}
                     onChange={(event) =>
@@ -427,6 +439,32 @@ export const FieldControl = memo(function FieldControl({
       );
     }
 
+    case "date":
+    case "time":
+    case "datetime": {
+      const { min, max } = getInputBounds(config.type, config.validation);
+      return (
+        <div>
+          <DateTimeField
+            kind={config.type}
+            id={spec.name}
+            label={spec.label}
+            value={String(field.value ?? "")}
+            onChange={field.onChange}
+            onBlur={field.onBlur}
+            inputRef={field.ref}
+            min={min}
+            max={max}
+            required={required}
+            disabled={config.disabled}
+            error={Boolean(error)}
+            describedBy={`${spec.name}-error`}
+          />
+          <FieldError id={`${spec.name}-error`} message={error} />
+        </div>
+      );
+    }
+
     default: {
       const type = TEXT_TYPES[config.type];
       return (
@@ -440,7 +478,9 @@ export const FieldControl = memo(function FieldControl({
             required={required}
             disabled={config.disabled}
             multiline={config.type === "textarea"}
-            minRows={config.type === "textarea" ? (config.rowNumber ?? 3) : undefined}
+            minRows={
+              config.type === "textarea" ? (config.rowNumber ?? 3) : undefined
+            }
             name={field.name}
             value={field.value ?? ""}
             onChange={field.onChange}
@@ -448,7 +488,8 @@ export const FieldControl = memo(function FieldControl({
             inputRef={field.ref}
             error={Boolean(error)}
             slotProps={{
-              inputLabel: type && SHRINK_TYPES.has(type) ? { shrink: true } : undefined,
+              inputLabel:
+                type && SHRINK_TYPES.has(type) ? { shrink: true } : undefined,
               htmlInput: {
                 "aria-describedby": `${spec.name}-error`,
                 inputMode: config.type === "number" ? "decimal" : undefined,
