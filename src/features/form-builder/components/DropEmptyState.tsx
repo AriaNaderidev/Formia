@@ -59,7 +59,9 @@ export const DropEmptyState = ({ onBrowseFields }: DropEmptyStateProps) => {
             <img
               src={EmptyStateImage}
               alt=""
-              className="h-32 w-auto rounded-md object-contain sm:h-44"
+              className={`w-auto rounded-md object-contain transition-[height] duration-300 ease-out ${
+                isDragging ? "h-[min(45vh,22rem)]" : "h-32 sm:h-44"
+              }`}
             />
           </div>
 
@@ -85,12 +87,16 @@ export const DropEmptyState = ({ onBrowseFields }: DropEmptyStateProps) => {
           </div>
         </div>
 
+        {/* Collapses while dragging, so the drop zone (and the image) can take the space. */}
         <div
-          className={`w-full pt-8 transition-[opacity,translate] duration-300 ${
-            isDragging ? "pointer-events-none translate-y-2 opacity-0" : "opacity-100"
+          inert={isDragging}
+          className={`grid w-full transition-[grid-template-rows,opacity] duration-300 ${
+            isDragging ? "grid-rows-[0fr] opacity-0" : "grid-rows-[1fr] opacity-100"
           }`}
         >
-          <TemplateGallery onSelect={applyTemplate} />
+          <div className="min-h-0 overflow-hidden pt-8">
+            <TemplateGallery onSelect={applyTemplate} />
+          </div>
         </div>
       </div>
     </div>
