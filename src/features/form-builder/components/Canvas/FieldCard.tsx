@@ -34,7 +34,7 @@ export const FieldCard = memo(function FieldCard({
   const meta = PALETTE_META[field.type];
   const Icon = meta.icon;
   // Content elements have no label; their text identifies them better than their type.
-  const title = field.label || field.content?.trim() || meta.title;
+  const title = field.name || field.content?.trim() || meta.title;
   const isRequired = Boolean(field.validation?.required);
 
   const openEditor = useCallback(() => {
@@ -69,7 +69,9 @@ export const FieldCard = memo(function FieldCard({
   // A timer rather than transitionend: with reduced motion there is no transition to end.
   useEffect(() => {
     if (!isLeaving) return;
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
     const timer = window.setTimeout(finishDelete, reduced ? 0 : LEAVE_MS);
     return () => window.clearTimeout(timer);
   }, [isLeaving, finishDelete]);
@@ -87,7 +89,7 @@ export const FieldCard = memo(function FieldCard({
         id={`field-card-${field.id}`}
         className={`animate-pop-in grid transition-[grid-template-rows,opacity,scale] duration-200 ease-out motion-reduce:transition-none ${
           isLeaving
-            ? "pointer-events-none grid-rows-[0fr] scale-95 opacity-0"
+            ? "pointer-events-none scale-95 grid-rows-[0fr] opacity-0"
             : "grid-rows-[1fr]"
         }`}
       >
@@ -111,22 +113,28 @@ export const FieldCard = memo(function FieldCard({
                 </span>
                 <span className="text-ink-muted block truncate text-xs">
                   {meta.title}
-                  {field.name && meta.category !== "layout" && meta.category !== "content" ? (
-                    <span className="font-mono text-[11px]"> · {field.name}</span>
-                  ) : null}
+
                   {isRequired && <span className="text-plum"> · Required</span>}
                 </span>
               </span>
             </button>
 
-            <FieldActions label={title} onEdit={openEditor} onDelete={startDelete} />
+            <FieldActions
+              label={title}
+              onEdit={openEditor}
+              onDelete={startDelete}
+            />
           </div>
         </div>
       </div>
 
       {hasOpened ? (
         <Suspense fallback={null}>
-          <FieldEditDialog field={field} open={isEditOpen} onClose={closeEditor} />
+          <FieldEditDialog
+            field={field}
+            open={isEditOpen}
+            onClose={closeEditor}
+          />
         </Suspense>
       ) : null}
     </>
