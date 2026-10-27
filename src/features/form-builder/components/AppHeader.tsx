@@ -9,6 +9,7 @@ import RedoRoundedIcon from "@mui/icons-material/RedoRounded";
 import UndoRoundedIcon from "@mui/icons-material/UndoRounded";
 import Tooltip from "@mui/material/Tooltip";
 import { parseFormSchema, toFormSchema } from "@/features/form-schema";
+import { Logo } from "@/ui/Logo";
 import { toast } from "@/ui/toast";
 import { downloadText } from "@/utils/download";
 import { useFormBuilderContext } from "../context/useFormBuilderContext";
@@ -123,15 +124,10 @@ export const AppHeader = ({
             <MenuRoundedIcon fontSize="small" />
           </ToolButton>
         </span>
-        <span
-          aria-hidden
-          className="from-plum to-mauve grid size-8 shrink-0 place-items-center rounded-xl bg-gradient-to-br text-sm font-bold text-white shadow-[0_4px_12px_-4px_rgba(82,45,96,0.6)]"
-        >
-          F
-        </span>
+        <Logo className="size-8 shrink-0" />
         <div className="hidden min-w-0 sm:block">
           <h1 className="text-ink mb-0.5 truncate text-sm leading-tight font-semibold">
-            Form Generator
+            Formia
           </h1>
           <p className="text-ink-muted flex items-center gap-1 text-[11px] leading-tight">
             {savedAt ? (
