@@ -60,6 +60,8 @@ export type Ctx = {
   optionConsts: Map<string, string>;
   /** Named imports from the UI library (MUI only). */
   uiImports: Set<string>;
+  /** MUI X date picker components in use (DatePicker, TimePicker, DateTimePicker). */
+  pickers: Set<string>;
   /** Library members the generated body actually uses (register, control, reset...). */
   uses: Set<string>;
 };

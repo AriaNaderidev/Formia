@@ -35,6 +35,63 @@ const TEXT_TYPES: Partial<Record<FormField["type"], string>> = {
 
 const SHRINK_TYPES = new Set(["date", "time", "datetime-local", "color"]);
 
+const PICKERS = {
+  date: { component: "DatePicker", format: "YYYY-MM-DD", min: "minDate", max: "maxDate" },
+  time: { component: "TimePicker", format: "HH:mm", min: "minTime", max: "maxTime" },
+  datetime: {
+    component: "DateTimePicker",
+    format: "YYYY-MM-DDTHH:mm",
+    min: "minDateTime",
+    max: "maxDateTime",
+  },
+} as const;
+
+/** A stored bound ("today" or a formatted value) as a dayjs expression. */
+const pickerBound = (type: keyof typeof PICKERS, raw: string, edge: "start" | "end") => {
+  if (raw === "today") {
+    return type === "date" ? "dayjs()" : `dayjs().${edge === "start" ? "startOf" : "endOf"}("day")`;
+  }
+  return `dayjs(${JSON.stringify(type === "time" ? `1970-01-01T${raw}` : raw)})`;
+};
+
+/**
+ * Date, time and date-time fields use MUI X pickers. The form still holds the same
+ * strings as a native input (`YYYY-MM-DD`, `HH:mm`), so the schema is unchanged.
+ */
+const renderPicker = (spec: FieldSpec, ctx: Ctx): string => {
+  const { binding: b } = ctx;
+  const { field } = spec;
+  const type = field.type as keyof typeof PICKERS;
+  const picker = PICKERS[type];
+  ctx.pickers.add(picker.component);
+
+  const err = b.error(spec);
+  const value = b.value(spec);
+  // A time is parsed against an arbitrary day, since dayjs has no time-only constructor.
+  const parse = type === "time" ? "dayjs(`1970-01-01T${" + value + "}`)" : `dayjs(${value})`;
+  const bounds = [
+    spec.temporal?.earliest &&
+      ` ${picker.min}={${pickerBound(type, spec.temporal.earliest.value, "start")}}`,
+    spec.temporal?.latest &&
+      ` ${picker.max}={${pickerBound(type, spec.temporal.latest.value, "end")}}`,
+  ].join("");
+  const textField = [
+    "fullWidth: true",
+    `id: "${spec.name}"`,
+    spec.required && "required: true",
+    `error: Boolean(${err})`,
+    `helperText: ${err}`,
+    `onBlur: ${b.blur(spec)}`,
+    b.ref && `inputRef: ${b.ref}`,
+  ]
+    .filter(Boolean)
+    .join(", ");
+  const className = field.className ? ` className=${jsxString(field.className)}` : "";
+  const next = `next?.isValid() ? next.format("${picker.format}") : ""`;
+
+  return `<${picker.component} label=${jsxString(spec.label)}${field.disabled ? " disabled" : ""}${className}${bounds} value={${value} ? ${parse} : null} onChange={(next) => ${b.set(spec, next)}} slotProps={{ textField: { ${textField} } }} />`;
+};
+
 const renderControl = (spec: FieldSpec, ctx: Ctx): string => {
   const { binding: b, uiImports: ui } = ctx;
   const { field } = spec;
@@ -86,6 +143,11 @@ const renderControl = (spec: FieldSpec, ctx: Ctx): string => {
       const accept = spec.file?.accept?.join(",");
       return `<FormControl error={Boolean(${err})}${flags(field, spec)}><FormLabel>${jsxText(spec.label)}</FormLabel><Button component="label" variant="outlined" sx={{ alignSelf: "flex-start", mt: 1 }}>{${value}.length > 0 ? ${value}.map((file) => file.name).join(", ") : "Choose a file"}<input hidden type="file"${accept ? ` accept=${jsxString(accept)}` : ""} onChange={(event) => ${b.set(spec, "Array.from(event.target.files ?? [])")}} /></Button>${helper(err, ctx)}</FormControl>`;
     }
+
+    case "date":
+    case "time":
+    case "datetime":
+      return renderPicker(spec, ctx);
 
     default: {
       ui.add("TextField");

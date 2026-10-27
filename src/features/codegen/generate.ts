@@ -49,6 +49,9 @@ const LIBRARY_DEPS: Record<FormLibrary, string[]> = {
   tanstack: ["@tanstack/react-form", "zod"],
 };
 
+/** Only added when the form has a date, time or date-time field. */
+const PICKER_DEPS = ["@mui/x-date-pickers", "dayjs"];
+
 const UI_DEPS: Record<UiKit, string[]> = {
   tailwind: [],
   mui: ["@mui/material", "@emotion/react", "@emotion/styled"],
@@ -148,10 +151,13 @@ type Parts = {
 
 const formOpen = (ctx: Ctx, onSubmit: string) =>
   ctx.options.ui === "mui"
-    ? `<Box component="form" noValidate onSubmit={${onSubmit}} sx={{ display: "flex", flexDirection: "column", gap: 2.5, maxWidth: 560, mx: "auto" }}>`
+    ? `${ctx.pickers.size ? "<LocalizationProvider dateAdapter={AdapterDayjs}>" : ""}<Box component="form" noValidate onSubmit={${onSubmit}} sx={{ display: "flex", flexDirection: "column", gap: 2.5, maxWidth: 560, mx: "auto" }}>`
     : `<form noValidate onSubmit={${onSubmit}} className="mx-auto flex w-full max-w-xl flex-col gap-5">`;
 
-const formClose = (ctx: Ctx) => (ctx.options.ui === "mui" ? "</Box>" : "</form>");
+const formClose = (ctx: Ctx) =>
+  ctx.options.ui === "mui"
+    ? `</Box>${ctx.pickers.size ? "</LocalizationProvider>" : ""}`
+    : "</form>";
 
 const defaultsObject = (specs: FieldSpec[]) =>
   `{\n${specs.map((spec) => `  ${propKey(spec.name)}: ${literal(spec)},`).join("\n")}\n}`;
@@ -283,6 +289,7 @@ export const generateFormCode = (
     binding: createBinding(options.library, uses),
     optionConsts: consts.names,
     uiImports: new Set(),
+    pickers: new Set(),
     uses,
   };
 
@@ -312,6 +319,16 @@ export const generateFormCode = (
       );
       break;
   }
+  if (ctx.pickers.size) {
+    imports.push(
+      `import dayjs from "dayjs";`,
+      `import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";`,
+      ...[...ctx.pickers]
+        .sort()
+        .map((picker) => `import { ${picker} } from "@mui/x-date-pickers/${picker}";`),
+      `import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";`,
+    );
+  }
   if (ctx.uiImports.size) {
     imports.push(`import { ${[...ctx.uiImports].sort().join(", ")} } from "@mui/material";`);
   }
@@ -328,7 +345,11 @@ export const generateFormCode = (
         ? tanstackComponent(parts)
         : rhfComponent(parts);
 
-  const dependencies = [...LIBRARY_DEPS[options.library], ...UI_DEPS[options.ui]];
+  const dependencies = [
+    ...LIBRARY_DEPS[options.library],
+    ...UI_DEPS[options.ui],
+    ...(ctx.pickers.size ? PICKER_DEPS : []),
+  ];
 
   const sections = [
     `/**
