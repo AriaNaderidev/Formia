@@ -22,7 +22,7 @@ const toSerializable = (data: Record<string, unknown>) =>
 const Empty = () => <span className="text-ink-muted/60">—</span>;
 
 const Pill = ({ children }: { children: ReactNode }) => (
-  <span className="bg-plum/[0.07] text-plum inline-flex max-w-full items-center truncate rounded-md px-1.5 py-0.5 text-[11px] font-medium">
+  <span className="bg-plum/[0.07] text-plum inline-flex max-w-full items-center truncate rounded-md px-1.5 py-0.5 text-xs font-medium">
     {children}
   </span>
 );
@@ -36,7 +36,7 @@ const renderValue = (spec: FieldSpec, value: unknown): ReactNode => {
   if (typeof value === "boolean") {
     return (
       <span
-        className={`inline-flex items-center gap-1 text-xs font-medium ${
+        className={`inline-flex items-center gap-1.5 text-sm font-medium ${
           value ? "text-emerald-600" : "text-ink-muted"
         }`}
       >
@@ -63,9 +63,9 @@ const renderValue = (spec: FieldSpec, value: unknown): ReactNode => {
 
   if (spec.field.type === "color") {
     return (
-      <span className="inline-flex items-center gap-1.5 font-mono text-xs">
+      <span className="inline-flex items-center gap-1.5 font-mono text-sm">
         <span
-          className="border-line size-3.5 rounded border"
+          className="border-line size-4 rounded border"
           style={{ backgroundColor: String(value) }}
         />
         {String(value)}
@@ -75,7 +75,7 @@ const renderValue = (spec: FieldSpec, value: unknown): ReactNode => {
 
   if (spec.field.type === "rating") {
     return (
-      <span className="text-xs tracking-wider text-amber-500">
+      <span className="text-base tracking-wider text-amber-500">
         {"★".repeat(Number(value))}
         <span className="text-ink-muted/30">
           {"★".repeat(Math.max(0, (spec.field.max ?? 5) - Number(value)))}
@@ -85,24 +85,30 @@ const renderValue = (spec: FieldSpec, value: unknown): ReactNode => {
   }
 
   if (spec.field.type === "password") {
-    return <span className="font-mono text-xs">{"•".repeat(Math.min(String(value).length, 12))}</span>;
+    return (
+      <span className="font-mono text-sm">
+        {"•".repeat(Math.min(String(value).length, 12))}
+      </span>
+    );
   }
 
   const text = spec.field.options ? labelOf(String(value)) : String(value);
   return (
-    <span className={`text-ink text-xs break-words ${typeof value === "number" ? "tabular-nums" : ""}`}>
+    <span
+      className={`text-ink text-sm break-words ${typeof value === "number" ? "tabular-nums" : ""}`}
+    >
       {text}
     </span>
   );
 };
 
-/** The body of the "Form submitted" toast: the values as a table, or the raw JSON. */
+/** The body of the "Form submitted" dialog: the values as a table, or the raw JSON. */
 export const SubmissionView = ({ data, specs }: SubmissionViewProps) => {
   const [view, setView] = useState<"table" | "json">("table");
   const json = toSerializable(data);
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-2">
         <SegmentedControl
           ariaLabel="Submitted data view"
@@ -113,32 +119,38 @@ export const SubmissionView = ({ data, specs }: SubmissionViewProps) => {
             { value: "table", label: "Fields" },
             { value: "json", label: "JSON" },
           ]}
-          className="w-36"
+          className="w-44"
         />
         <CopyButton text={json} label="submitted JSON" showText />
       </div>
 
-      <div key={view} className="animate-fade-up max-h-64 overflow-auto rounded-xl">
+      <div
+        key={view}
+        className="animate-fade-up"
+      >
         {view === "table" ? (
           <dl className="divide-line border-line divide-y rounded-xl border">
             {specs.map((spec) => (
-              <div key={spec.name} className="flex items-start justify-between gap-3 px-3 py-2">
+              <div
+                key={spec.name}
+                className="flex items-start justify-between gap-3 px-4 py-3"
+              >
                 <dt className="min-w-0">
-                  <span className="text-ink block truncate text-xs font-medium">
+                  <span className="text-ink block text-sm font-medium break-words">
                     {spec.label}
                   </span>
-                  <span className="text-ink-muted block truncate font-mono text-[10px]">
+                  <span className="text-ink-muted block font-mono text-xs break-all">
                     {spec.name}
                   </span>
                 </dt>
-                <dd className="max-w-[60%] min-w-0 text-end">
+                <dd className="max-w-[55%] min-w-0 text-end">
                   {renderValue(spec, data[spec.name])}
                 </dd>
               </div>
             ))}
           </dl>
         ) : (
-          <pre className="bg-[#282c34] p-3 font-mono text-[11px] leading-relaxed text-[#abb2bf]">
+          <pre className="bg-[#282c34] p-4 font-mono text-[13px] leading-relaxed overflow-x-auto rounded-xl text-[#abb2bf]">
             {json}
           </pre>
         )}

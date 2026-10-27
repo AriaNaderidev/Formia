@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import DesktopWindowsOutlinedIcon from "@mui/icons-material/DesktopWindowsOutlined";
 import PhoneIphoneOutlinedIcon from "@mui/icons-material/PhoneIphoneOutlined";
 import type { FormField } from "@/features/form-schema";
@@ -6,23 +6,11 @@ import { FormRenderer, type SubmittedForm } from "@/features/form-renderer";
 import { SegmentedControl } from "@/ui/SegmentedControl";
 import { toast } from "@/ui/toast";
 import { oneOf, useLocalStorageState } from "@/utils/useLocalStorageState";
-import { SubmissionView } from "../SubmissionView";
+import { SubmissionDialog } from "../SubmissionDialog";
 
 type Device = "desktop" | "mobile";
 
 const VALIDATION_TOAST = "preview-validation";
-
-const showSubmission = ({ data, specs }: SubmittedForm) => {
-  toast.dismissKey(VALIDATION_TOAST);
-  toast.success("Form submitted", {
-    key: "preview-submission",
-    description:
-      specs.length === 1 ? "1 field passed validation" : `${specs.length} fields passed validation`,
-    duration: 12000,
-    wide: true,
-    content: <SubmissionView data={data} specs={specs} />,
-  });
-};
 
 const showInvalid = (count: number) => {
   toast.error(count === 1 ? "1 field needs attention" : `${count} fields need attention`, {
@@ -37,7 +25,13 @@ export const PreviewTab = ({ fields }: { fields: FormField[] }) => {
     "desktop",
     oneOf("desktop", "mobile"),
   );
-  const onSubmit = useCallback(showSubmission, []);
+  const [submission, setSubmission] = useState<SubmittedForm | null>(null);
+  const [submissionOpen, setSubmissionOpen] = useState(false);
+  const onSubmit = useCallback((result: SubmittedForm) => {
+    toast.dismissKey(VALIDATION_TOAST);
+    setSubmission(result);
+    setSubmissionOpen(true);
+  }, []);
   const isMobile = device === "mobile";
 
   return (
@@ -78,6 +72,12 @@ export const PreviewTab = ({ fields }: { fields: FormField[] }) => {
       >
         <FormRenderer fields={fields} onSubmit={onSubmit} onInvalid={showInvalid} />
       </div>
+
+      <SubmissionDialog
+        submission={submission}
+        open={submissionOpen}
+        onClose={() => setSubmissionOpen(false)}
+      />
     </div>
   );
 };
