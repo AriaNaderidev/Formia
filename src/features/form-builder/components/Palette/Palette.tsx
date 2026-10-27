@@ -10,7 +10,12 @@ import { PaletteSearch } from "./Palettesearch";
 import { PaletteEmptyState } from "./Paletteemptystate";
 import { PaletteSection } from "./Palettesection";
 
-export const Palette = () => {
+type PaletteProps = {
+  /** Called after a click adds a field (the palette is a closable drawer on small screens). */
+  onAdd?: () => void;
+};
+
+export const Palette = ({ onAdd }: PaletteProps) => {
   const [query, setQuery] = useState("");
   const { groups, total, isFiltering } = usePaletteGroups(query);
 
@@ -83,7 +88,7 @@ export const Palette = () => {
               forceOpen={isFiltering}
             >
               {group.items.map((entry) => (
-                <PaletteItem key={entry.id} entry={entry} />
+                <PaletteItem key={entry.id} entry={entry} onAdd={onAdd} />
               ))}
             </PaletteSection>
           ))

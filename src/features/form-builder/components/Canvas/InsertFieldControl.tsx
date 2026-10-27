@@ -33,20 +33,20 @@ export const InsertFieldControl = ({
   return (
     <div
       ref={containerRef}
-      className="group/ctl absolute inset-y-0 start-full z-20 flex items-center ps-1.5"
+      className="group/ctl z-20 flex items-center max-sm:mt-1.5 max-sm:ps-7 sm:absolute sm:inset-y-0 sm:start-full sm:ps-1.5"
     >
       <span
         aria-hidden
-        className={`bg-plum/50 pointer-events-none absolute inset-y-0 start-0 w-0.5 rounded-full transition-opacity duration-150 ${
+        className={`bg-plum/50 pointer-events-none absolute inset-y-0 start-0 w-0.5 max-sm:hidden rounded-full transition-opacity duration-150 ${
           isOpen ? "opacity-100" : "opacity-0 group-hover/ctl:opacity-100"
         }`}
       />
 
       <div
-        className={`relative transition-opacity duration-150 ${
+        className={`relative flex items-center gap-2 transition-opacity duration-150 ${
           isOpen
             ? "opacity-100"
-            : "pointer-events-none opacity-0 group-focus-within/row:pointer-events-auto group-focus-within/row:opacity-100 group-hover/row:pointer-events-auto group-hover/row:opacity-100 [@media(pointer:coarse)]:pointer-events-auto [@media(pointer:coarse)]:opacity-100"
+            : "pointer-events-none opacity-0 group-focus-within/row:pointer-events-auto group-focus-within/row:opacity-100 group-hover/row:pointer-events-auto group-hover/row:opacity-100 max-sm:pointer-events-auto max-sm:opacity-100 [@media(pointer:coarse)]:pointer-events-auto [@media(pointer:coarse)]:opacity-100"
         }`}
       >
         <Tooltip title={isOpen ? "" : LABEL} enterDelay={400}>
@@ -80,6 +80,14 @@ export const InsertFieldControl = ({
             />
           </IconButton>
         </Tooltip>
+        {/* Touch screens have no tooltip, so say what the button does. */}
+        <span
+          aria-hidden
+          onClick={() => onOpenChange(!isOpen)}
+          className="text-ink-muted text-xs sm:hidden"
+        >
+          Add a field beside
+        </span>
 
         {isOpen ? (
           <AddFieldMenu

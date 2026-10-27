@@ -1,5 +1,6 @@
 import { useRef, useState, type ReactNode } from "react";
 import BookmarkAddOutlinedIcon from "@mui/icons-material/BookmarkAddOutlined";
+import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import CloudDoneOutlinedIcon from "@mui/icons-material/CloudDoneOutlined";
 import DeleteSweepOutlinedIcon from "@mui/icons-material/DeleteSweepOutlined";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
@@ -20,6 +21,8 @@ type AppHeaderProps = {
   canUndo: boolean;
   canRedo: boolean;
   savedAt: number | null;
+  /** Opens the field list. Only offered where the palette isn't always visible. */
+  onOpenFields: () => void;
 };
 
 const Shortcut = ({ label, keys }: { label: string; keys: string }) => (
@@ -50,7 +53,7 @@ const ToolButton = ({
         aria-label={label}
         onClick={onClick}
         disabled={disabled}
-        className="text-ink-muted hover:bg-plum/[0.07] hover:text-plum focus-visible:outline-plum grid size-9 place-items-center rounded-xl transition-[color,background-color,scale,opacity] duration-150 focus-visible:outline-2 active:scale-90 disabled:pointer-events-none disabled:opacity-35"
+        className="text-ink-muted hover:bg-plum/[0.07] hover:text-plum focus-visible:outline-plum grid size-8 place-items-center rounded-xl transition-[color,background-color,scale,opacity] duration-150 focus-visible:outline-2 active:scale-90 disabled:pointer-events-none disabled:opacity-35 sm:size-9"
       >
         {children}
       </button>
@@ -64,6 +67,7 @@ export const AppHeader = ({
   canUndo,
   canRedo,
   savedAt,
+  onOpenFields,
 }: AppHeaderProps) => {
   const [saveOpen, setSaveOpen] = useState(false);
   const { fields, setFields, getFields } = useFormBuilderContext();
@@ -112,15 +116,20 @@ export const AppHeader = ({
   };
 
   return (
-    <header className="border-line col-span-full flex h-14 items-center justify-between gap-4 border-b bg-white/80 px-4 backdrop-blur">
-      <div className="flex min-w-0 items-center gap-3">
+    <header className="border-line col-span-full flex h-14 items-center justify-between gap-2 border-b bg-white/80 px-2 backdrop-blur sm:gap-4 sm:px-4">
+      <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+        <span className="lg:hidden">
+          <ToolButton label="Open field list" onClick={onOpenFields}>
+            <MenuRoundedIcon fontSize="small" />
+          </ToolButton>
+        </span>
         <span
           aria-hidden
           className="from-plum to-mauve grid size-8 shrink-0 place-items-center rounded-xl bg-gradient-to-br text-sm font-bold text-white shadow-[0_4px_12px_-4px_rgba(82,45,96,0.6)]"
         >
           F
         </span>
-        <div className="min-w-0">
+        <div className="hidden min-w-0 sm:block">
           <h1 className="text-ink mb-0.5 truncate text-sm leading-tight font-semibold">
             Form Generator
           </h1>
@@ -142,7 +151,7 @@ export const AppHeader = ({
 
       <nav
         aria-label="Form actions"
-        className="flex items-center gap-0.5"
+        className="flex shrink-0 items-center gap-0.5"
       >
         <ToolButton
           label="Undo"

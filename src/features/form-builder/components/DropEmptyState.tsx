@@ -6,7 +6,12 @@ import { CANVAS_DROPPABLE_ID } from "../hooks/dnd_config";
 import { useFormBuilderActions } from "../context/useFormBuilderContext";
 import { TemplateGallery } from "../templates/TemplateGallery";
 
-export const DropEmptyState = () => {
+type DropEmptyStateProps = {
+  /** Opens the field list where it isn't always visible. */
+  onBrowseFields: () => void;
+};
+
+export const DropEmptyState = ({ onBrowseFields }: DropEmptyStateProps) => {
   const { setNodeRef, isOver, active } = useDroppable({
     id: CANVAS_DROPPABLE_ID,
   });
@@ -70,6 +75,13 @@ export const DropEmptyState = () => {
             <p className="text-ink-muted text-sm">
               Drag a field in, or click one in the field list. Or begin with a template below.
             </p>
+            <button
+              type="button"
+              onClick={onBrowseFields}
+              className="bg-plum hover:bg-plum-dark focus-visible:outline-plum mt-3 rounded-full px-4 py-2 text-sm font-medium text-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 active:scale-95 lg:hidden"
+            >
+              Browse fields
+            </button>
           </div>
         </div>
 

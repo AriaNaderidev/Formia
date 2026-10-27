@@ -8,6 +8,8 @@ import { PaletteItemView } from "./Paletteitemview";
 
 type PaletteItemProps = {
   entry: PaletteEntry;
+  /** Called after a click adds the field, e.g. to close the palette drawer. */
+  onAdd?: () => void;
 };
 
 /** Brings a freshly added card into view once it has rendered. */
@@ -18,7 +20,7 @@ const revealCard = (id: string) =>
       ?.scrollIntoView({ block: "nearest", behavior: "smooth" }),
   );
 
-export const PaletteItem = memo(({ entry }: PaletteItemProps) => {
+export const PaletteItem = memo(({ entry, onAdd }: PaletteItemProps) => {
   const { setFields, getFields } = useFormBuilderActions();
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: entry.id,
@@ -30,6 +32,7 @@ export const PaletteItem = memo(({ entry }: PaletteItemProps) => {
     const field = createFieldFromType(entry.type, getFields());
     setFields((prev) => [...prev, field]);
     revealCard(field.id);
+    onAdd?.();
   };
 
   return (

@@ -86,7 +86,7 @@ export const PreviewPanel = () => {
   return (
     <aside
       aria-label="Preview and export"
-      className="flex min-h-0 flex-col py-4 pe-4 max-lg:ps-4"
+      className="flex min-h-0 flex-1 flex-col p-2 sm:p-4 xl:ps-0"
     >
       <div className="border-line flex min-h-0 flex-1 flex-col rounded-2xl border bg-white shadow-sm">
         <header className="border-line flex flex-col gap-3 border-b px-4 pt-4 pb-3">
