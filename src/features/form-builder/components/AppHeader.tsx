@@ -1,4 +1,5 @@
-import { useRef, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
+import BookmarkAddOutlinedIcon from "@mui/icons-material/BookmarkAddOutlined";
 import CloudDoneOutlinedIcon from "@mui/icons-material/CloudDoneOutlined";
 import DeleteSweepOutlinedIcon from "@mui/icons-material/DeleteSweepOutlined";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
@@ -11,6 +12,7 @@ import { toast } from "@/ui/toast";
 import { downloadText } from "@/utils/download";
 import { useFormBuilderContext } from "../context/useFormBuilderContext";
 import { MOD_KEY } from "../hooks/useUndoShortcuts";
+import { SaveTemplateDialog } from "../templates/SaveTemplateDialog";
 
 type AppHeaderProps = {
   undo: () => void;
@@ -56,7 +58,14 @@ const ToolButton = ({
   </Tooltip>
 );
 
-export const AppHeader = ({ undo, redo, canUndo, canRedo, savedAt }: AppHeaderProps) => {
+export const AppHeader = ({
+  undo,
+  redo,
+  canUndo,
+  canRedo,
+  savedAt,
+}: AppHeaderProps) => {
+  const [saveOpen, setSaveOpen] = useState(false);
   const { fields, setFields, getFields } = useFormBuilderContext();
   const fileInput = useRef<HTMLInputElement>(null);
   const isEmpty = fields.length === 0;
@@ -67,14 +76,18 @@ export const AppHeader = ({ undo, redo, canUndo, canRedo, savedAt }: AppHeaderPr
       JSON.stringify(toFormSchema(getFields()), null, 2),
       "application/json",
     );
-    toast.success("Schema exported", { description: "Saved as form.schema.json" });
+    toast.success("Schema exported", {
+      description: "Saved as form.schema.json",
+    });
   };
 
   const importSchema = async (file: File) => {
     try {
       const result = parseFormSchema(JSON.parse(await file.text()));
       if (!result.ok) {
-        toast.error("That file isn't a form schema", { description: result.error });
+        toast.error("That file isn't a form schema", {
+          description: result.error,
+        });
         return;
       }
       setFields(result.schema.fields);
@@ -83,7 +96,9 @@ export const AppHeader = ({ undo, redo, canUndo, canRedo, savedAt }: AppHeaderPr
         action: { label: "Undo", onClick: undo },
       });
     } catch {
-      toast.error("Couldn't read that file", { description: "Choose a valid .json file." });
+      toast.error("Couldn't read that file", {
+        description: "Choose a valid .json file.",
+      });
     }
   };
 
@@ -106,10 +121,15 @@ export const AppHeader = ({ undo, redo, canUndo, canRedo, savedAt }: AppHeaderPr
           F
         </span>
         <div className="min-w-0">
-          <h1 className="text-ink truncate text-sm leading-tight font-semibold">Form Generator</h1>
+          <h1 className="text-ink mb-0.5 truncate text-sm leading-tight font-semibold">
+            Form Generator
+          </h1>
           <p className="text-ink-muted flex items-center gap-1 text-[11px] leading-tight">
             {savedAt ? (
-              <span key={savedAt} className="animate-fade-in inline-flex items-center gap-1">
+              <span
+                key={savedAt}
+                className="animate-fade-in inline-flex items-center gap-1"
+              >
                 <CloudDoneOutlinedIcon sx={{ fontSize: 13 }} />
                 Saved in this browser
               </span>
@@ -120,7 +140,10 @@ export const AppHeader = ({ undo, redo, canUndo, canRedo, savedAt }: AppHeaderPr
         </div>
       </div>
 
-      <nav aria-label="Form actions" className="flex items-center gap-0.5">
+      <nav
+        aria-label="Form actions"
+        className="flex items-center gap-0.5"
+      >
         <ToolButton
           label="Undo"
           tooltip={<Shortcut label="Undo" keys={`${MOD_KEY} Z`} />}
@@ -140,11 +163,25 @@ export const AppHeader = ({ undo, redo, canUndo, canRedo, savedAt }: AppHeaderPr
 
         <span aria-hidden className="bg-line mx-1.5 h-5 w-px" />
 
-        <ToolButton label="Import schema" onClick={() => fileInput.current?.click()}>
+        <ToolButton
+          label="Import schema"
+          onClick={() => fileInput.current?.click()}
+        >
           <FileUploadOutlinedIcon fontSize="small" />
         </ToolButton>
-        <ToolButton label="Export schema" onClick={exportSchema} disabled={isEmpty}>
+        <ToolButton
+          label="Export schema"
+          onClick={exportSchema}
+          disabled={isEmpty}
+        >
           <FileDownloadOutlinedIcon fontSize="small" />
+        </ToolButton>
+        <ToolButton
+          label="Save as template"
+          onClick={() => setSaveOpen(true)}
+          disabled={isEmpty}
+        >
+          <BookmarkAddOutlinedIcon fontSize="small" />
         </ToolButton>
         <ToolButton label="Clear form" onClick={clearForm} disabled={isEmpty}>
           <DeleteSweepOutlinedIcon fontSize="small" />
@@ -162,6 +199,8 @@ export const AppHeader = ({ undo, redo, canUndo, canRedo, savedAt }: AppHeaderPr
           }}
         />
       </nav>
+
+      <SaveTemplateDialog open={saveOpen} onClose={() => setSaveOpen(false)} />
     </header>
   );
 };

@@ -23,6 +23,11 @@ export { buildZodSchema } from "./buildZodSchema";
 export { toFormSchema, parseFormSchema } from "./toFormSchema";
 export * from "./fieldSpec";
 export * from "./zodPlan";
-export { FORM_TEMPLATES, instantiateTemplate, type FormTemplate } from "./templates";
+export {
+  FORM_TEMPLATES,
+  instantiateTemplate,
+  templateFromFields,
+  type FormTemplate,
+} from "./templates";
 export * from "@/utils/rows_helper";
 export * from "./temporalBounds";
