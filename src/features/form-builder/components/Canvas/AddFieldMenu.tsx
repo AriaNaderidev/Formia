@@ -1,11 +1,11 @@
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import SearchIcon from "@mui/icons-material/Search";
 import InputAdornment from "@mui/material/InputAdornment";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import OutlinedInput from "@mui/material/OutlinedInput";
-import Paper from "@mui/material/Paper";
+import Popover from "@mui/material/Popover";
 import Typography from "@mui/material/Typography";
 import {
   createFieldFromType,
@@ -19,14 +19,17 @@ import { usePaletteGroups } from "../../hooks/usePaletteGroup";
 type AddFieldMenuProps = {
   /** Field the new one is inserted relative to. */
   anchorId: string;
+  /** The "+" button. The menu opens next to it. */
+  anchorEl: HTMLElement | null;
   onClose: () => void;
 };
 
 /**
- * Dropdown for choosing which field to insert.
- * Must be rendered inside a `relative` element that wraps the "+" button.
+ * Menu for choosing which field to insert. It renders in a portal above the whole page,
+ * so the canvas's scroll container can't clip it or push the layout around, and it keeps
+ * itself inside the viewport (flipping above the button when there is no room below).
  */
-export const AddFieldMenu = ({ anchorId, onClose }: AddFieldMenuProps) => {
+export const AddFieldMenu = ({ anchorId, anchorEl, onClose }: AddFieldMenuProps) => {
   const { setFields } = useFormBuilderActions();
   const [query, setQuery] = useState("");
   const { groups: allGroups } = usePaletteGroups(query);
@@ -42,19 +45,6 @@ export const AddFieldMenu = ({ anchorId, onClose }: AddFieldMenuProps) => {
     [allGroups],
   );
 
-  // Open upwards when there is no room below (e.g. the last row on screen).
-  const paperRef = useRef<HTMLDivElement | null>(null);
-  const [openUp, setOpenUp] = useState(false);
-  useLayoutEffect(() => {
-    const element = paperRef.current;
-    if (
-      element &&
-      element.getBoundingClientRect().bottom > window.innerHeight - 8
-    ) {
-      setOpenUp(true);
-    }
-  }, []);
-
   const handleAdd = useCallback(
     (type: FieldType) => {
       setFields((prev) =>
@@ -69,17 +59,27 @@ export const AddFieldMenu = ({ anchorId, onClose }: AddFieldMenuProps) => {
   );
 
   return (
-    <Paper
-      ref={paperRef}
-      elevation={8}
-      role="dialog"
-      aria-label="Add a field"
-      className={`absolute start-0 z-10 w-64 overflow-hidden ${
-        openUp
-          ? "animate-menu-up bottom-full mb-2 origin-bottom-left"
-          : "animate-menu-down top-full mt-2 origin-top-left"
-      }`}
-      sx={{ border: 1, borderColor: "divider", borderRadius: 1.5 }}
+    <Popover
+      open
+      anchorEl={anchorEl}
+      onClose={onClose}
+      anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+      transformOrigin={{ vertical: "top", horizontal: "left" }}
+      marginThreshold={12}
+      slotProps={{
+        paper: {
+          role: "dialog",
+          "aria-label": "Add a field",
+          elevation: 8,
+          sx: {
+            mt: 1,
+            width: "min(18rem, calc(100vw - 1.5rem))",
+            border: 1,
+            borderColor: "divider",
+            borderRadius: 1.5,
+          },
+        },
+      }}
     >
       <div className="border-line border-b p-2">
         <Typography
@@ -105,7 +105,7 @@ export const AddFieldMenu = ({ anchorId, onClose }: AddFieldMenuProps) => {
         />
       </div>
 
-      <div className="max-h-72 overflow-y-auto p-1">
+      <div className="max-h-[min(18rem,50vh)] overflow-y-auto p-1">
         {groups.length === 0 ? (
           <Typography
             variant="body2"
@@ -137,7 +137,7 @@ export const AddFieldMenu = ({ anchorId, onClose }: AddFieldMenuProps) => {
                     key={item.id}
                     dense
                     onClick={() => handleAdd(item.type)}
-                    sx={{ borderRadius: 1, gap: 0.5 }}
+                    sx={{ borderRadius: 1, gap: 0.5, minHeight: 40 }}
                   >
                     <ListItemIcon sx={{ minWidth: 32, color: "primary.main" }}>
                       <Icon fontSize="small" />
@@ -155,6 +155,6 @@ export const AddFieldMenu = ({ anchorId, onClose }: AddFieldMenuProps) => {
           ))
         )}
       </div>
-    </Paper>
+    </Popover>
   );
 };
