@@ -93,6 +93,24 @@ export const insertFieldAfterRow = (
   });
 };
 
+/** Palette drop onto the upper half of a row: the new field goes in its own row above it. */
+export const insertFieldBeforeRow = (
+  fields: FormField[],
+  newField: FormField,
+  rowKey: string,
+): FormField[] => {
+  const row = groupIntoRows(fields).find((r) => r.key === rowKey);
+  if (!row) return [...fields, newField];
+
+  const next = [...fields];
+  next.splice(
+    fields.findIndex((field) => field.id === row.fields[0].id),
+    0,
+    { ...newField, rowId: undefined },
+  );
+  return next;
+};
+
 /** Reorder whole rows. Pairs always stay together. */
 export const moveRow = (
   fields: FormField[],
