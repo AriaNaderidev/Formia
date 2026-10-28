@@ -1,23 +1,40 @@
 import { useDroppable } from "@dnd-kit/core";
-import EmptyStateImage from "@/assets/images/Empty.png";
+import EmptyStateImage from "@/assets/images/Empty.webp";
+import { instantiateTemplate, type FormTemplate } from "@/features/form-schema";
+import { toast } from "@/ui/toast";
 import { CANVAS_DROPPABLE_ID } from "../hooks/dnd_config";
+import { useFormBuilderActions } from "../context/useFormBuilderContext";
+import { TemplateGallery } from "../templates/TemplateGallery";
 
-export const DropEmptyState = () => {
+type DropEmptyStateProps = {
+  /** Opens the field list where it isn't always visible. */
+  onBrowseFields: () => void;
+};
+
+export const DropEmptyState = ({ onBrowseFields }: DropEmptyStateProps) => {
   const { setNodeRef, isOver, active } = useDroppable({
     id: CANVAS_DROPPABLE_ID,
   });
   const isDragging = Boolean(active);
+  const { setFields } = useFormBuilderActions();
 
   const caption = isOver
     ? "Release to add your first field"
     : isDragging
       ? "Drop it here"
-      : "Drag a field here to start building";
+      : "Add a field to start building";
+
+  const applyTemplate = (template: FormTemplate) => {
+    setFields(instantiateTemplate(template));
+    toast.success(`${template.title} template added`, {
+      description: "Edit any field, or press Undo to start over.",
+    });
+  };
 
   return (
     <div
       ref={setNodeRef}
-      className={`relative m-1 flex min-h-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed transition-colors duration-300 ${
+      className={`relative m-1 min-h-0 overflow-y-auto rounded-2xl border-2 border-dashed transition-colors duration-300 ${
         isOver
           ? "border-plum bg-plum/5"
           : isDragging
@@ -25,45 +42,68 @@ export const DropEmptyState = () => {
             : "border-transparent"
       }`}
     >
-      {/* ripple rings, only while hovering */}
-      {isOver && (
+      <div className="mx-auto flex min-h-full w-full max-w-4xl flex-col items-center justify-center px-4 py-6 sm:px-8 sm:py-10">
         <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 grid place-items-center motion-reduce:hidden"
+          className="flex flex-col items-center gap-3 select-none"
+          draggable={false}
         >
-          <span className="border-plum/40 motion-safe:animate-ripple col-start-1 row-start-1 size-64 rounded-full border-2" />
-          <span className="border-mauve/30 motion-safe:animate-ripple col-start-1 row-start-1 size-64 rounded-full border-2 [animation-delay:750ms]" />
-        </div>
-      )}
+          <div
+            className={`transition-[scale,translate,opacity,filter] duration-300 ease-out ${
+              isOver
+                ? "-translate-y-1 scale-110 drop-shadow-xl"
+                : isDragging
+                  ? "scale-95 opacity-70"
+                  : "motion-safe:animate-float"
+            }`}
+          >
+            <img
+              src={EmptyStateImage}
+              alt=""
+              // Intrinsic size lets the browser reserve the space (no layout shift);
+              // this image is the largest paint of the empty state, so fetch it first.
+              width={960}
+              height={640}
+              fetchPriority="high"
+              decoding="async"
+              className={`w-auto rounded-md object-contain transition-[height] duration-300 ease-out ${
+                isDragging ? "h-[min(45vh,22rem)]" : "h-32 sm:h-44"
+              }`}
+            />
+          </div>
 
-      <div
-        className="relative flex h-full max-h-112 min-h-0 flex-col items-center justify-center gap-4 select-none"
-        draggable={false}
-      >
+          <div className="text-center">
+            <p
+              aria-live="polite"
+              className={`text-lg font-semibold transition-colors duration-300 ${
+                isOver ? "text-plum" : "text-ink"
+              }`}
+            >
+              {caption}
+            </p>
+            <p className="text-ink-muted text-sm">
+              Drag a field in, or click one in the field list. Or begin with a template below.
+            </p>
+            <button
+              type="button"
+              onClick={onBrowseFields}
+              className="bg-plum hover:bg-plum-dark focus-visible:outline-plum mt-3 rounded-full px-4 py-2 text-sm font-medium text-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 active:scale-95 lg:hidden"
+            >
+              Browse fields
+            </button>
+          </div>
+        </div>
+
+        {/* Collapses while dragging, so the drop zone (and the image) can take the space. */}
         <div
-          className={`min-h-0 flex-1 transition-[scale,translate,opacity,filter] duration-300 ease-out ${
-            isOver
-              ? "-translate-y-1 scale-110 drop-shadow-xl"
-              : isDragging
-                ? "scale-95 opacity-70"
-                : "motion-safe:animate-float"
+          inert={isDragging}
+          className={`grid w-full transition-[grid-template-rows,opacity] duration-300 ${
+            isDragging ? "grid-rows-[0fr] opacity-0" : "grid-rows-[1fr] opacity-100"
           }`}
         >
-          <img
-            src={EmptyStateImage}
-            alt="empty_state"
-            className="h-full w-full rounded-md object-contain"
-          />
+          <div className="min-h-0 overflow-hidden pt-8">
+            <TemplateGallery onSelect={applyTemplate} />
+          </div>
         </div>
-
-        <p
-          aria-live="polite"
-          className={`shrink-0 text-lg font-semibold transition-colors duration-300 ${
-            isOver ? "text-plum" : "text-ink-muted"
-          }`}
-        >
-          {caption}
-        </p>
       </div>
     </div>
   );

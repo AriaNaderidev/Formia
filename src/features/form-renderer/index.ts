@@ -1,1 +1,1 @@
-export { FormRenderer } from "./FormRenderer";
+export { FormRenderer, type SubmittedForm } from "./FormRenderer";

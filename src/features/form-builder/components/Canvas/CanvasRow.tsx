@@ -2,6 +2,7 @@ import { memo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { RowContent } from "./RowContent";
+import { RowDropIndicator } from "./RowDropIndicator";
 import type { FieldRow } from "@/utils/rows_helper";
 
 type CanvasRowProps = {
@@ -41,6 +42,7 @@ export const CanvasRow = memo(function CanvasRow({
       }}
       className={`group/row relative select-none ${isDragging ? "z-30" : ""}`}
     >
+      <RowDropIndicator rowKey={row.key} />
       <RowContent
         row={row}
         isDragging={isDragging}

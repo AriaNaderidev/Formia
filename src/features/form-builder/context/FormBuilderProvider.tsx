@@ -1,6 +1,7 @@
-import { createElement, type ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import {
-  FormBuilderContext,
+  FormActionsContext,
+  FormFieldsContext,
   type FormBuilderContextType,
 } from "./formBuilderContext";
 
@@ -9,5 +10,13 @@ type ProviderProps = {
   value: FormBuilderContextType;
 };
 
-export const FormBuilderProvider = ({ children, value }: ProviderProps) =>
-  createElement(FormBuilderContext.Provider, { value }, children);
+export const FormBuilderProvider = ({ children, value }: ProviderProps) => {
+  const { fields, setFields, getFields } = value;
+  const actions = useMemo(() => ({ setFields, getFields }), [setFields, getFields]);
+
+  return (
+    <FormActionsContext.Provider value={actions}>
+      <FormFieldsContext.Provider value={fields}>{children}</FormFieldsContext.Provider>
+    </FormActionsContext.Provider>
+  );
+};

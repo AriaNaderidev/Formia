@@ -18,7 +18,7 @@ export const RowHandle = ({
   attributes,
   listeners,
 }: RowHandleProps) => (
-  <div className="absolute inset-y-0 end-full flex items-center pe-1.5">
+  <div className="flex items-center sm:absolute sm:inset-y-0 sm:end-full sm:pe-1.5">
     <button
       ref={setActivatorNodeRef}
       type="button"
@@ -28,7 +28,7 @@ export const RowHandle = ({
       className={`hover:bg-plum/5 hover:text-plum focus-visible:outline-plum grid h-9 w-6 touch-none place-items-center rounded-md transition-[opacity,color,background-color] duration-150 focus-visible:opacity-100 focus-visible:outline-2 ${
         isDragging
           ? "text-plum cursor-grabbing opacity-100"
-          : "text-ink-muted/60 cursor-grab opacity-0 group-hover/row:opacity-100 [@media(pointer:coarse)]:opacity-100"
+          : "text-ink-muted/60 cursor-grab opacity-0 group-hover/row:opacity-100 max-sm:opacity-100 [@media(pointer:coarse)]:opacity-100"
       }`}
     >
       <DragIndicatorIcon fontSize="small" />
