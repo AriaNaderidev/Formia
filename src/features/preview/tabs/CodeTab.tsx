@@ -4,8 +4,10 @@ import {
   DEFAULT_COMPONENT_NAME,
   formatCode,
   generateFormCode,
+  getFormattedCode,
   installCommand,
   toComponentName,
+  warmFormatter,
   type FormLibrary,
   type PackageManager,
   type UiKit,
@@ -48,30 +50,38 @@ const Label = ({ children, htmlFor }: { children: string; htmlFor?: string }) =>
   </label>
 );
 
-/** Formats in the background; the previous result stays visible until the new one is ready. */
+/** Waits before formatting the other combinations, so it never competes with a click. */
+const PREFETCH_DELAY_MS = 300;
+
+/**
+ * Shows the generated code at once and swaps in the formatted version when the worker is done
+ * (or straight away if that combination was formatted before).
+ */
 const useFormattedCode = (raw: string, enabled: boolean) => {
-  const [result, setResult] = useState<{ source: string; code: string } | null>(null);
+  const [, setVersion] = useState(0);
+  const [failed, setFailed] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || getFormattedCode(raw) !== undefined) return;
     let cancelled = false;
     formatCode(raw)
-      .then((code) => {
-        if (!cancelled) setResult({ source: raw, code });
+      .then(() => {
+        if (!cancelled) setVersion((version) => version + 1);
       })
       .catch((error: unknown) => {
-        // Unformatted code is still valid code; show it rather than nothing.
+        // Unformatted code is still valid code; keep showing it.
         console.error("Could not format generated code", error);
-        if (!cancelled) setResult({ source: raw, code: raw });
+        if (!cancelled) setFailed(raw);
       });
     return () => {
       cancelled = true;
     };
   }, [raw, enabled]);
 
+  const formatted = getFormattedCode(raw);
   return {
-    code: result?.code ?? "",
-    isPending: result?.source !== raw,
+    code: formatted ?? raw,
+    isPending: formatted === undefined && failed !== raw,
   };
 };
 
@@ -98,11 +108,47 @@ const CodeTab = ({ fields, active }: { fields: FormField[]; active: boolean }) =
   );
   const componentName = useDeferredValue(nameInput);
 
+  // The options respond to the click at once; building and highlighting the code follows
+  // at low priority instead of blocking the toggle.
+  const deferredLibrary = useDeferredValue(library);
+  const deferredUi = useDeferredValue(ui);
+
   const generated = useMemo(
-    () => generateFormCode(fields, { library, ui, componentName }),
-    [fields, library, ui, componentName],
+    () =>
+      generateFormCode(fields, {
+        library: deferredLibrary,
+        ui: deferredUi,
+        componentName,
+      }),
+    [fields, deferredLibrary, deferredUi, componentName],
   );
   const { code, isPending } = useFormattedCode(generated.code, active);
+
+  useEffect(() => warmFormatter(), []);
+
+  // Once this combination is formatted, quietly format the others so switching is instant.
+  useEffect(() => {
+    if (!active || isPending) return;
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      for (const lib of LIBRARIES) {
+        for (const kit of UI_KITS) {
+          if (cancelled) return;
+          if (lib.value === deferredLibrary && kit.value === deferredUi) continue;
+          const { code: raw } = generateFormCode(fields, {
+            library: lib.value,
+            ui: kit.value,
+            componentName,
+          });
+          await formatCode(raw).catch(() => {});
+        }
+      }
+    }, PREFETCH_DELAY_MS);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [active, isPending, fields, deferredLibrary, deferredUi, componentName]);
   const install = installCommand(generated.dependencies, manager);
   const resolvedName = toComponentName(nameInput);
 

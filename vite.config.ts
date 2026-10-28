@@ -31,6 +31,8 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // The formatter worker lazy-loads Prettier, which needs code-splitting (not IIFE output).
+  worker: { format: "es" },
   build: {
     rollupOptions: {
       output: {

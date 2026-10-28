@@ -4,7 +4,7 @@ export {
   LIBRARY_LABELS,
   UI_LABELS,
 } from "./generate";
-export { formatCode } from "./format";
+export { formatCode, getFormattedCode, warmFormatter } from "./format";
 export { DEFAULT_COMPONENT_NAME, toComponentName } from "./naming";
 export type {
   CodegenOptions,
