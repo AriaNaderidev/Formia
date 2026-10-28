@@ -1,5 +1,5 @@
 import { useDroppable } from "@dnd-kit/core";
-import EmptyStateImage from "@/assets/images/Empty.png";
+import EmptyStateImage from "@/assets/images/Empty.webp";
 import { instantiateTemplate, type FormTemplate } from "@/features/form-schema";
 import { toast } from "@/ui/toast";
 import { CANVAS_DROPPABLE_ID } from "../hooks/dnd_config";
@@ -59,6 +59,12 @@ export const DropEmptyState = ({ onBrowseFields }: DropEmptyStateProps) => {
             <img
               src={EmptyStateImage}
               alt=""
+              // Intrinsic size lets the browser reserve the space (no layout shift);
+              // this image is the largest paint of the empty state, so fetch it first.
+              width={960}
+              height={640}
+              fetchPriority="high"
+              decoding="async"
               className={`w-auto rounded-md object-contain transition-[height] duration-300 ease-out ${
                 isDragging ? "h-[min(45vh,22rem)]" : "h-32 sm:h-44"
               }`}
