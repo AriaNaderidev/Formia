@@ -13,7 +13,7 @@ import {
 } from "react-hook-form";
 import { TextControl } from "./TextControl";
 import { slugify, type EditorValues } from "./editor_model";
-import { DeleteOutlineOutlined } from "@mui/icons-material";
+import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 
 type OptionRowProps = {
   index: number;

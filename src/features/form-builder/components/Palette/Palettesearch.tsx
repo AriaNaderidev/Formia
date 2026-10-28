@@ -1,5 +1,8 @@
-import { IconButton, InputAdornment, OutlinedInput } from "@mui/material";
-import { Clear, Search } from "@mui/icons-material";
+import IconButton from "@mui/material/IconButton";
+import InputAdornment from "@mui/material/InputAdornment";
+import OutlinedInput from "@mui/material/OutlinedInput";
+import Clear from "@mui/icons-material/Clear";
+import Search from "@mui/icons-material/Search";
 
 type PaletteSearchProps = {
   value: string;

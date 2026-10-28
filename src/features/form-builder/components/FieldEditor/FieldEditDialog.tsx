@@ -18,7 +18,7 @@ import { PALETTE_META } from "../Palette/palette_config";
 import { GeneralPanel } from "./GeneralPanel";
 import { OptionsPanel } from "./OptionsPanel";
 import { ValidationPanel } from "./ValidationPanel";
-import { SaveOutlined } from "@mui/icons-material";
+import SaveOutlined from "@mui/icons-material/SaveOutlined";
 
 type FieldEditDialogProps = {
   field: FormField;
