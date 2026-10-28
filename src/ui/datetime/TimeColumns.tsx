@@ -69,7 +69,7 @@ const Column = ({
       role="listbox"
       aria-label={label}
       onKeyDown={onKeyDown}
-      className="flex max-h-[17rem] w-14 flex-col gap-0.5 overflow-y-auto pe-0.5 [scrollbar-width:thin]"
+      className="flex max-h-[17rem] w-14 flex-col gap-0.5 overflow-y-auto pe-0.5"
     >
       {items.map((item) => {
         const isSelected = item.value === selected;

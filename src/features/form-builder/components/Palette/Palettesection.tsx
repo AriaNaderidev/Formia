@@ -4,7 +4,7 @@ import ButtonBase from "@mui/material/ButtonBase";
 import Collapse from "@mui/material/Collapse";
 import Typography from "@mui/material/Typography";
 
-import { ExpandMore } from "@mui/icons-material";
+import ExpandMore from "@mui/icons-material/ExpandMore";
 
 type PaletteSectionProps = {
   label: string;

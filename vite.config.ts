@@ -14,6 +14,10 @@ const VENDOR_CHUNKS: Record<string, string[]> = {
 const chunkFor = (id: string) => {
   // Windows paths use backslashes; normalise so one pattern works everywhere.
   const path = id.replace(/\\/g, "/");
+  // Rollup's CJS interop helper is shared by every vendor chunk. Left alone it lands in
+  // `mui`, which makes `react` and `mui` import each other and the app dies on load
+  // ("Cannot access ... before initialization"). `react` imports nothing, so it goes there.
+  if (path.includes("commonjsHelpers")) return "react";
   return Object.keys(VENDOR_CHUNKS).find((name) =>
     VENDOR_CHUNKS[name].some((pkg) => path.includes(`/node_modules/${pkg}/`)),
   );
@@ -27,6 +31,8 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // The formatter worker lazy-loads Prettier, which needs code-splitting (not IIFE output).
+  worker: { format: "es" },
   build: {
     rollupOptions: {
       output: {

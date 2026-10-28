@@ -21,7 +21,8 @@ export const CodePanel = ({
   pending = false,
   showLineNumbers = true,
 }: CodePanelProps) => (
-  <div className="relative overflow-hidden rounded-xl bg-[#282c34] shadow-[0_8px_24px_-12px_rgba(42,22,51,0.5)]">
+  // Dark surface: the global plum scrollbar thumb would vanish, so swap its colours (see index.css).
+  <div className="relative overflow-hidden rounded-xl bg-[#282c34] shadow-[0_8px_24px_-12px_rgba(42,22,51,0.5)] [--scrollbar-thumb-hover:rgba(255,255,255,0.4)] [--scrollbar-thumb:rgba(255,255,255,0.18)]">
     <div className="flex items-center justify-between gap-2 border-b border-white/[0.07] py-1.5 ps-3 pe-1.5">
       <div className="flex min-w-0 items-center gap-2 text-xs text-white/60">
         <span aria-hidden className="flex gap-1.5">
