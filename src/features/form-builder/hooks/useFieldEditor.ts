@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from "react";
 import { useForm, type FieldErrors } from "react-hook-form";
 import type { FormField } from "@/features/form-schema";
-import { useFormBuilderContext } from "../context/useFormBuilderContext";
+import { useFormBuilderActions } from "../context/useFormBuilderContext";
 import { cleanEditorValues, toEditorValues, type EditorValues } from "../components/FieldEditor/editor_model";
 
 type UseFieldEditorOptions = {
@@ -14,7 +14,7 @@ export const useFieldEditor = (
   source: FormField,
   { open, onClose, onInvalid }: UseFieldEditorOptions,
 ) => {
-  const { setFields } = useFormBuilderContext();
+  const { setFields } = useFormBuilderActions();
   const methods = useForm<EditorValues>({
     defaultValues: toEditorValues(source),
   });

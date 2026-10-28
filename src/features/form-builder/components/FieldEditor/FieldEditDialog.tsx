@@ -18,6 +18,7 @@ import { PALETTE_META } from "../Palette/palette_config";
 import { GeneralPanel } from "./GeneralPanel";
 import { OptionsPanel } from "./OptionsPanel";
 import { ValidationPanel } from "./ValidationPanel";
+import { SaveOutlined } from "@mui/icons-material";
 
 type FieldEditDialogProps = {
   field: FormField;
@@ -137,8 +138,19 @@ export const FieldEditDialog = ({
             <Button type="button" color="inherit" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" variant="contained" disabled={!isDirty}>
-              Save changes
+            <Button
+              type="submit"
+              variant="contained"
+              aria-label="Save changes"
+              startIcon={<SaveOutlined />}
+              disabled={!isDirty}
+              sx={{
+                "& .MuiButton-startIcon": {
+                  margin: { xs: 0, md: "0 8px 0 -4px" },
+                },
+              }}
+            >
+              <span className="sr-only md:not-sr-only">Save changes</span>
             </Button>
           </Stack>
         </DialogActions>

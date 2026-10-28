@@ -5,6 +5,7 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import { useController, useFormContext } from "react-hook-form";
 import { TODAY } from "@/features/form-schema";
+import { DateTimeField } from "@/ui/datetime/DateTimeField";
 import type { EditorValues, FieldPath, FieldRules } from "./editor_model";
 
 type TemporalValueControlProps = {
@@ -15,7 +16,12 @@ type TemporalValueControlProps = {
   allowToday?: boolean;
   todayHint?: string;
   rules?: FieldRules;
+  /** Earliest and latest value the picker offers. */
+  min?: string;
+  max?: string;
 };
+
+const KINDS = { date: "date", time: "time", "datetime-local": "datetime" } as const;
 
 /** A date / time / datetime input that can also hold the "today" token. */
 export const TemporalValueControl = ({
@@ -25,6 +31,8 @@ export const TemporalValueControl = ({
   allowToday = false,
   todayHint,
   rules,
+  min,
+  max,
 }: TemporalValueControlProps) => {
   const { control } = useFormContext<EditorValues>();
   const { field, fieldState } = useController({ control, name, rules });
@@ -32,21 +40,30 @@ export const TemporalValueControl = ({
 
   return (
     <Stack spacing={0.25}>
-      <TextField
-        fullWidth
-        size="small"
-        label={label}
-        // The token is not a valid value for a native date input, so show text instead.
-        type={isToday ? "text" : inputType}
-        value={isToday ? "Today" : (field.value ?? "")}
-        disabled={isToday}
-        onChange={field.onChange}
-        onBlur={field.onBlur}
-        inputRef={field.ref}
-        error={Boolean(fieldState.error)}
-        helperText={fieldState.error?.message}
-        slotProps={{ inputLabel: { shrink: true } }}
-      />
+      {isToday ? (
+        // The token isn't a date the picker can show, so show it as text instead.
+        <TextField
+          fullWidth
+          size="small"
+          label={label}
+          value="Today"
+          disabled
+          slotProps={{ inputLabel: { shrink: true } }}
+        />
+      ) : (
+        <DateTimeField
+          kind={KINDS[inputType]}
+          label={label}
+          value={String(field.value ?? "")}
+          onChange={field.onChange}
+          onBlur={field.onBlur}
+          inputRef={field.ref}
+          min={min}
+          max={max}
+          error={Boolean(fieldState.error)}
+          helperText={fieldState.error?.message}
+        />
+      )}
 
       {allowToday ? (
         <>

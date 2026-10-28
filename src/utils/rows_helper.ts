@@ -1,13 +1,23 @@
 import { arrayMove } from "@dnd-kit/sortable";
-import type { FormField } from "@/features/form-schema";
+import type { FieldType, FormField } from "@/features/form-schema";
 
 export const MAX_FIELDS_PER_ROW = 2;
 
 export type InsertPlacement = "below" | "beside";
 export type FieldRow = { key: string; fields: FormField[] };
 
+/** Elements that always take a whole row: nothing can sit beside them. */
+const FULL_WIDTH_TYPES = new Set<FieldType>(["heading", "divider", "alert"]);
+
+export const isFullWidth = (type: FieldType) => FULL_WIDTH_TYPES.has(type);
+
 /** Fields without a rowId are simply a row of one. */
 export const getRowKey = (field: FormField) => field.rowId ?? field.id;
+
+const canJoin = (row: FieldRow, field: FormField) =>
+  row.fields.length < MAX_FIELDS_PER_ROW &&
+  !isFullWidth(field.type) &&
+  !row.fields.some((item) => isFullWidth(item.type));
 
 /** Groups the flat field list into rows (consecutive fields with the same row key). */
 export const groupIntoRows = (fields: FormField[]): FieldRow[] => {
@@ -17,7 +27,7 @@ export const groupIntoRows = (fields: FormField[]): FieldRow[] => {
     const key = getRowKey(field);
     const last = rows[rows.length - 1];
 
-    if (last && last.key === key && last.fields.length < MAX_FIELDS_PER_ROW) {
+    if (last && last.key === key && canJoin(last, field)) {
       last.fields.push(field);
     } else {
       // `field.id` fallback keeps row keys unique if a row ever overflows.
@@ -35,7 +45,8 @@ type InsertOptions = { anchorId: string; placement: InsertPlacement };
 
 /**
  * below:  new field gets its own row, placed after the anchor's whole row.
- * beside: new field joins the anchor's row (falls back to "below" if the row is full).
+ * beside: new field joins the anchor's row. Falls back to "below" when the row is
+ *         full, or when either side is a full-width element.
  */
 export const insertField = (
   fields: FormField[],
@@ -51,7 +62,7 @@ export const insertField = (
   );
   if (!row) return [...fields, newField];
 
-  if (placement === "beside" && row.fields.length < MAX_FIELDS_PER_ROW) {
+  if (placement === "beside" && canJoin(row, newField)) {
     const rowId = getRowKey(anchor);
     const next = fields.map((field) =>
       field.id === anchorId ? { ...field, rowId } : field,
@@ -80,6 +91,24 @@ export const insertFieldAfterRow = (
     anchorId: row.fields[row.fields.length - 1].id,
     placement: "below",
   });
+};
+
+/** Palette drop onto the upper half of a row: the new field goes in its own row above it. */
+export const insertFieldBeforeRow = (
+  fields: FormField[],
+  newField: FormField,
+  rowKey: string,
+): FormField[] => {
+  const row = groupIntoRows(fields).find((r) => r.key === rowKey);
+  if (!row) return [...fields, newField];
+
+  const next = [...fields];
+  next.splice(
+    fields.findIndex((field) => field.id === row.fields[0].id),
+    0,
+    { ...newField, rowId: undefined },
+  );
+  return next;
 };
 
 /** Reorder whole rows. Pairs always stay together. */

@@ -106,6 +106,12 @@ export type FormField = {
   buttonVariant?: ButtonVariant;
 };
 
+/**
+ * Field names become object keys, HTML ids and JSX attributes in generated code,
+ * so they are limited to characters that are safe in all three.
+ */
+export const FIELD_NAME_PATTERN = /^[A-Za-z_$][\w$-]*$/;
+
 export type FormSchema = {
   version: 1;
   fields: FormField[];

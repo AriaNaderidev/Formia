@@ -9,6 +9,7 @@ import { slugify } from "./editor_model";
 import { TextControl } from "./TextControl";
 import { NumberControl } from "./NumberControl";
 import { TEMPORAL_META } from "./editor_config";
+import { TemporalValueControl } from "./TemporalValueControl";
 import { SwitchControl } from "./SwitchControl";
 import { SelectControl } from "./SelectControl";
 
@@ -50,10 +51,10 @@ export const DefaultValueControl = ({ type }: { type: FieldType }) => {
     case "datetime": {
       const meta = TEMPORAL_META[type];
       return (
-        <TextControl
+        <TemporalValueControl
           name="defaultValue"
           label={meta.defaultLabel}
-          type={meta.inputType}
+          inputType={meta.inputType}
           min={bounds?.earliest}
           max={bounds?.latest}
           rules={{

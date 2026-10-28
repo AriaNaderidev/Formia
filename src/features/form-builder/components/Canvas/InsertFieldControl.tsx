@@ -1,8 +1,7 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
-import { useDismiss } from "@/features/form-builder/hooks/useDismiss";
 import { AddFieldMenu } from "./AddFieldMenu";
 
 type InsertFieldControlProps = {
@@ -21,36 +20,33 @@ export const InsertFieldControl = ({
   isOpen,
   setOpenMenuKey,
 }: InsertFieldControlProps) => {
-  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [button, setButton] = useState<HTMLElement | null>(null);
 
   const onOpenChange = useCallback(
     (open: boolean) => setOpenMenuKey(open ? menuKey : null),
     [menuKey, setOpenMenuKey],
   );
-
-  useDismiss(containerRef, isOpen, () => onOpenChange(false));
+  const close = useCallback(() => onOpenChange(false), [onOpenChange]);
 
   return (
-    <div
-      ref={containerRef}
-      className="group/ctl absolute inset-y-0 start-full z-20 flex items-center ps-1.5"
-    >
+    <div className="group/ctl z-20 flex items-center max-sm:mt-1.5 max-sm:ps-7 sm:absolute sm:inset-y-0 sm:start-full sm:ps-1.5">
       <span
         aria-hidden
-        className={`bg-plum/50 pointer-events-none absolute inset-y-0 start-0 w-0.5 rounded-full transition-opacity duration-150 ${
+        className={`bg-plum/50 pointer-events-none absolute inset-y-0 start-0 w-0.5 rounded-full transition-opacity duration-150 max-sm:hidden ${
           isOpen ? "opacity-100" : "opacity-0 group-hover/ctl:opacity-100"
         }`}
       />
 
       <div
-        className={`relative transition-opacity duration-150 ${
+        className={`relative flex items-center gap-2 transition-opacity duration-150 ${
           isOpen
             ? "opacity-100"
-            : "pointer-events-none opacity-0 group-focus-within/row:pointer-events-auto group-focus-within/row:opacity-100 group-hover/row:pointer-events-auto group-hover/row:opacity-100 [@media(pointer:coarse)]:pointer-events-auto [@media(pointer:coarse)]:opacity-100"
+            : "pointer-events-none opacity-0 group-focus-within/row:pointer-events-auto group-focus-within/row:opacity-100 group-hover/row:pointer-events-auto group-hover/row:opacity-100 max-sm:pointer-events-auto max-sm:opacity-100 [@media(pointer:coarse)]:pointer-events-auto [@media(pointer:coarse)]:opacity-100"
         }`}
       >
         <Tooltip title={isOpen ? "" : LABEL} enterDelay={400}>
           <IconButton
+            ref={setButton}
             size="small"
             aria-label={LABEL}
             aria-haspopup="dialog"
@@ -80,12 +76,17 @@ export const InsertFieldControl = ({
             />
           </IconButton>
         </Tooltip>
+        {/* Touch screens have no tooltip, so say what the button does. */}
+        <span
+          aria-hidden
+          onClick={() => onOpenChange(!isOpen)}
+          className="text-ink-muted text-xs sm:hidden"
+        >
+          Add a field beside
+        </span>
 
         {isOpen ? (
-          <AddFieldMenu
-            anchorId={anchorId}
-            onClose={() => onOpenChange(false)}
-          />
+          <AddFieldMenu anchorId={anchorId} anchorEl={button} onClose={close} />
         ) : null}
       </div>
     </div>

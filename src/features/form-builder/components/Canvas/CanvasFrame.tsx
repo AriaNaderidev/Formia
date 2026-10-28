@@ -26,10 +26,10 @@ export const CanvasFrame = ({ count, children }: CanvasFrameProps) => {
     <section
       ref={setNodeRef}
       aria-label="Form canvas"
-      className="flex min-h-full flex-col p-4"
+      className="flex min-h-full flex-col p-2 sm:p-4"
     >
       <div
-        className={`flex flex-1 flex-col rounded-2xl border bg-white px-10 py-5 shadow-sm transition-[border-color,box-shadow] duration-300 ${
+        className={`flex flex-1 flex-col rounded-2xl border bg-white px-2 py-4 shadow-sm sm:px-10 sm:py-5 transition-[border-color,box-shadow] duration-300 ${
           isOverCanvas
             ? "border-plum ring-plum/10 shadow-lg ring-4"
             : isAddingField

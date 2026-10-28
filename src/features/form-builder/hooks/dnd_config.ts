@@ -5,8 +5,10 @@ import {
   rectIntersection,
   useSensor,
   useSensors,
+  type Active,
   type CollisionDetection,
   type Modifier,
+  type Over,
 } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { isPaletteId } from "@/features/form-schema";
@@ -30,6 +32,17 @@ export const formBuilderCollision: CollisionDetection = (args) => {
       (container) => container.id !== CANVAS_DROPPABLE_ID,
     ),
   });
+};
+
+/**
+ * Which edge of the hovered row a palette drop lands on: the half the dragged
+ * tile's centre is in.
+ */
+export const getDropSide = (active: Active, over: Over): "above" | "below" => {
+  const dragged = active.rect.current.translated;
+  if (!dragged) return "below";
+  const draggedCenter = dragged.top + dragged.height / 2;
+  return draggedCenter < over.rect.top + over.rect.height / 2 ? "above" : "below";
 };
 
 /** Keeps a reordered field on a vertical rail. Palette drags stay free. */

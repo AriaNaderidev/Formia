@@ -19,23 +19,34 @@ const Tile = styled("div", {
     userSelect: "none",
     touchAction: "none",
     transition: theme.transitions.create(
-      ["border-color", "background-color", "box-shadow"],
+      ["border-color", "background-color", "box-shadow", "transform"],
       { duration: theme.transitions.duration.shorter },
     ),
 
     "& .palette-icon": {
-      transition: theme.transitions.create(["background-color", "color"], {
-        duration: theme.transitions.duration.shorter,
-      }),
+      transition: theme.transitions.create(
+        ["background-color", "color", "transform"],
+        { duration: theme.transitions.duration.shorter },
+      ),
     },
 
     "&:hover": {
       borderColor: theme.palette.primary.main,
       backgroundColor: alpha(theme.palette.primary.main, 0.04),
+      transform: "translateY(-2px)",
+      boxShadow: `0 6px 16px -8px ${alpha(theme.palette.primary.main, 0.45)}`,
     },
     "&:hover .palette-icon": {
       backgroundColor: theme.palette.primary.main,
       color: theme.palette.primary.contrastText,
+      transform: "rotate(-6deg) scale(1.06)",
+    },
+    "&:active": {
+      transform: "translateY(0) scale(0.96)",
+      boxShadow: "none",
+    },
+    "@media (prefers-reduced-motion: reduce)": {
+      "&, &:hover, &:active, &:hover .palette-icon": { transform: "none" },
     },
     "&:focus-visible": {
       outline: `2px solid ${theme.palette.primary.main}`,
@@ -46,6 +57,7 @@ const Tile = styled("div", {
     ...(overlay && {
       width: 112,
       cursor: "grabbing",
+      "&, &:hover": { transform: "rotate(-3deg) scale(1.04)" },
       borderColor: theme.palette.primary.main,
       boxShadow: theme.shadows[8],
     }),
