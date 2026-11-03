@@ -71,7 +71,7 @@ src/
 
 - **Imports**: use the `@/` alias for `src/`. Existing files mix relative and alias imports. Prefer `@/` in new code.
 - **Naming**: components `PascalCase.tsx`. Hooks `useSomething.ts`. Pure helpers can be camelCase or snake_case in existing files. Match the file you are editing. (`rows_helper.ts`, `palette_config.ts` are snake_case. Most new files are camelCase.)
-- **Comments**: short JSDoc on exported functions and components when the reason is not obvious. Explain *why*, not *what*. Match the density of the surrounding file.
+- **Comments**: short JSDoc on exported functions and components when the reason is not obvious. Explain _why_, not _what_. Match the density of the surrounding file.
 - **Performance patterns already in use, keep them**:
   - Memoised row and card components with stable props (`memo`, `useCallback`).
   - Write-only components use `useFormBuilderActions()`, not `useFormBuilderContext()`, so they do not re-render on every field change.
@@ -91,7 +91,6 @@ These conventions are the user's own. Follow them.
   - Examples: `feat(Canvas): Add delete animation with undo`, `fix(Palette): Fix the correctness of palette components' imports`.
 - **One feature per commit.** When asked to commit a body of work, split it into separate commits, one per feature, ordered so each commit's dependencies come earlier. Do not put unrelated changes in one commit.
 - **Commit only when asked.** Do not push, and do not open a PR, unless the user asks.
-- **End every commit message with the trailer** `Co-Authored-By: Claude Haiku 5.5 <noreply@anthropic.com>`. Use the model name in use. Pass it with `-m` as a separate paragraph.
 - **Pre-commit hook** runs `lint-staged`, which runs `eslint --fix` on staged JS/TS files. If it fails, fix the code and make a new commit. Never use `--no-verify`.
 - Line endings: `core.autocrlf` is `true` on this machine and many existing files are CRLF. Git will warn "LF will be replaced by CRLF". Those warnings are expected. Do not reformat unrelated files to change line endings.
 
