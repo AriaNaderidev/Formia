@@ -10,11 +10,16 @@ import UndoRoundedIcon from "@mui/icons-material/UndoRounded";
 import Tooltip from "@mui/material/Tooltip";
 import { parseFormSchema, toFormSchema } from "@/features/form-schema";
 import { Logo } from "@/ui/Logo";
+import { announce } from "@/ui/announce";
 import { toast } from "@/ui/toast";
 import { downloadText } from "@/utils/download";
 import { useFormBuilderContext } from "../context/useFormBuilderContext";
 import { MOD_KEY } from "../hooks/useUndoShortcuts";
+import { useHeaderShortcuts } from "../shortcuts/useHeaderShortcuts";
 import { SaveTemplateDialog } from "../templates/SaveTemplateDialog";
+
+/** Tooltip text for a header action's "A, then letter" sequence. */
+const sequence = (letter: string) => `A then ${letter}`;
 
 type AppHeaderProps = {
   undo: () => void;
@@ -36,12 +41,15 @@ const Shortcut = ({ label, keys }: { label: string; keys: string }) => (
 const ToolButton = ({
   label,
   tooltip,
+  shortcut,
   onClick,
   disabled,
   children,
 }: {
   label: string;
   tooltip?: ReactNode;
+  /** In aria-keyshortcuts syntax, e.g. "Control+Z". */
+  shortcut?: string;
   onClick: () => void;
   disabled?: boolean;
   children: ReactNode;
@@ -52,6 +60,7 @@ const ToolButton = ({
       <button
         type="button"
         aria-label={label}
+        aria-keyshortcuts={shortcut}
         onClick={onClick}
         disabled={disabled}
         className="text-ink-muted hover:bg-plum/[0.07] hover:text-plum focus-visible:outline-plum grid size-8 place-items-center rounded-xl transition-[color,background-color,scale,opacity] duration-150 focus-visible:outline-2 active:scale-90 disabled:pointer-events-none disabled:opacity-35 sm:size-9"
@@ -109,12 +118,25 @@ export const AppHeader = ({
 
   const clearForm = () => {
     const count = getFields().length;
+    if (count === 0) return;
     setFields([]);
     toast.info(`Cleared ${count} ${count === 1 ? "field" : "fields"}`, {
       duration: 6000,
       action: { label: "Undo", onClick: undo },
     });
   };
+
+  // Nothing to do on an empty form, but say so rather than stay silent.
+  const needsFields = (action: () => void) => () => {
+    if (getFields().length === 0) announce("The form has no fields yet.");
+    else action();
+  };
+  useHeaderShortcuts({
+    importSchema: () => fileInput.current?.click(),
+    exportSchema: needsFields(exportSchema),
+    saveTemplate: needsFields(() => setSaveOpen(true)),
+    clearForm: needsFields(clearForm),
+  });
 
   return (
     <header className="border-line col-span-full flex h-14 items-center justify-between gap-2 border-b bg-white/80 px-2 backdrop-blur sm:gap-4 sm:px-4">
@@ -152,6 +174,7 @@ export const AppHeader = ({
         <ToolButton
           label="Undo"
           tooltip={<Shortcut label="Undo" keys={`${MOD_KEY} Z`} />}
+          shortcut="Control+Z Meta+Z"
           onClick={undo}
           disabled={!canUndo}
         >
@@ -160,6 +183,7 @@ export const AppHeader = ({
         <ToolButton
           label="Redo"
           tooltip={<Shortcut label="Redo" keys={`${MOD_KEY} ⇧ Z`} />}
+          shortcut="Control+Shift+Z Meta+Shift+Z Control+Y"
           onClick={redo}
           disabled={!canRedo}
         >
@@ -170,12 +194,14 @@ export const AppHeader = ({
 
         <ToolButton
           label="Import schema"
+          tooltip={<Shortcut label="Import schema" keys={sequence("I")} />}
           onClick={() => fileInput.current?.click()}
         >
           <FileUploadOutlinedIcon fontSize="small" />
         </ToolButton>
         <ToolButton
           label="Export schema"
+          tooltip={<Shortcut label="Export schema" keys={sequence("E")} />}
           onClick={exportSchema}
           disabled={isEmpty}
         >
@@ -183,12 +209,18 @@ export const AppHeader = ({
         </ToolButton>
         <ToolButton
           label="Save as template"
+          tooltip={<Shortcut label="Save as template" keys={sequence("T")} />}
           onClick={() => setSaveOpen(true)}
           disabled={isEmpty}
         >
           <BookmarkAddOutlinedIcon fontSize="small" />
         </ToolButton>
-        <ToolButton label="Clear form" onClick={clearForm} disabled={isEmpty}>
+        <ToolButton
+          label="Clear form"
+          tooltip={<Shortcut label="Clear form" keys={sequence("C")} />}
+          onClick={clearForm}
+          disabled={isEmpty}
+        >
           <DeleteSweepOutlinedIcon fontSize="small" />
         </ToolButton>
 
