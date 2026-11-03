@@ -125,6 +125,22 @@ export const moveRow = (
   return arrayMove(rows, from, to).flatMap((row) => row.fields);
 };
 
+/** Moves the row holding `fieldId` up (-1) or down (+1). Returns the same array at either end. */
+export const shiftRowOf = (
+  fields: FormField[],
+  fieldId: string,
+  delta: -1 | 1,
+): FormField[] => {
+  const rows = groupIntoRows(fields);
+  const from = rows.findIndex((row) =>
+    row.fields.some((field) => field.id === fieldId),
+  );
+  const target = rows[from + delta];
+  if (from === -1 || !target) return fields;
+
+  return moveRow(fields, rows[from].key, target.key);
+};
+
 /**
  * Safety net: brings the list into the canonical shape.
  *  - a row of two shares a rowId equal to its first field's id

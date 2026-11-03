@@ -1,7 +1,8 @@
-import { memo } from "react";
+import { memo, type KeyboardEvent } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import Tooltip from "@mui/material/Tooltip";
 import { createFieldFromType } from "@/features/form-schema";
+import { announce } from "@/ui/announce";
 import { useFormBuilderActions } from "../../context/useFormBuilderContext";
 import type { PaletteEntry } from "./palette_config";
 import { PaletteItemView } from "./Paletteitemview";
@@ -37,7 +38,17 @@ export const PaletteItem = memo(({ entry, onAdd }: PaletteItemProps) => {
     const field = createFieldFromType(entry.type, getFields());
     setFields((prev) => [...prev, field]);
     revealCard(field.id);
+    announce(`${entry.title} added at the end of the form.`);
     onAdd?.();
+  };
+
+  // dnd-kit would turn Enter and Space into a keyboard drag here, which has no good
+  // landing spot for a new field. They add the field instead; rows are moved by keyboard
+  // from the canvas.
+  const onKeyDown = (event: KeyboardEvent) => {
+    if ((event.key !== "Enter" && event.key !== " ") || event.altKey) return;
+    event.preventDefault();
+    if (!event.repeat) add();
   };
 
   return (
@@ -45,11 +56,12 @@ export const PaletteItem = memo(({ entry, onAdd }: PaletteItemProps) => {
       title={
         isDragging
           ? ""
-          : `${entry.description}. ${clickOnly ? "Click" : "Click or drag"} to add.`
+          : `${entry.description}. ${clickOnly ? "Click" : "Click or drag"} to add, or press Enter.`
       }
       placement="top"
       enterDelay={600}
       disableInteractive
+      describeChild
     >
       <PaletteItemView
         ref={setNodeRef}
@@ -58,6 +70,11 @@ export const PaletteItem = memo(({ entry, onAdd }: PaletteItemProps) => {
         clickOnly={clickOnly}
         {...attributes}
         {...listeners}
+        data-palette-item
+        aria-label={`Add ${entry.title}`}
+        aria-roledescription={undefined}
+        aria-describedby={undefined}
+        onKeyDown={onKeyDown}
         onClick={add}
       />
     </Tooltip>
