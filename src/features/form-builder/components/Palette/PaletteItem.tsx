@@ -8,7 +8,10 @@ import { PaletteItemView } from "./Paletteitemview";
 
 type PaletteItemProps = {
   entry: PaletteEntry;
-  /** Called after a click adds the field, e.g. to close the palette drawer. */
+  /**
+   * Called after a click adds the field. Only the palette drawer passes it, and
+   * there dragging is off: adding by click is the only way to insert.
+   */
   onAdd?: () => void;
 };
 
@@ -22,9 +25,11 @@ const revealCard = (id: string) =>
 
 export const PaletteItem = memo(({ entry, onAdd }: PaletteItemProps) => {
   const { setFields, getFields } = useFormBuilderActions();
+  const clickOnly = onAdd !== undefined;
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: entry.id,
     data: { source: "palette", type: entry.type },
+    disabled: clickOnly,
   });
 
   // A click (no drag: the pointer sensor needs 4px of movement) appends the field.
@@ -37,7 +42,11 @@ export const PaletteItem = memo(({ entry, onAdd }: PaletteItemProps) => {
 
   return (
     <Tooltip
-      title={isDragging ? "" : `${entry.description}. Click or drag to add.`}
+      title={
+        isDragging
+          ? ""
+          : `${entry.description}. ${clickOnly ? "Click" : "Click or drag"} to add.`
+      }
       placement="top"
       enterDelay={600}
       disableInteractive
@@ -46,6 +55,7 @@ export const PaletteItem = memo(({ entry, onAdd }: PaletteItemProps) => {
         ref={setNodeRef}
         entry={entry}
         dragging={isDragging}
+        clickOnly={clickOnly}
         {...attributes}
         {...listeners}
         onClick={add}

@@ -4,9 +4,10 @@ import Typography from "@mui/material/Typography";
 import type { PaletteEntry } from "./palette_config";
 
 const Tile = styled("div", {
-  shouldForwardProp: (prop) => prop !== "dragging" && prop !== "overlay",
-})<{ dragging?: boolean; overlay?: boolean }>(
-  ({ theme, dragging, overlay }) => ({
+  shouldForwardProp: (prop) =>
+    prop !== "dragging" && prop !== "overlay" && prop !== "clickOnly",
+})<{ dragging?: boolean; overlay?: boolean; clickOnly?: boolean }>(
+  ({ theme, dragging, overlay, clickOnly }) => ({
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
@@ -15,9 +16,10 @@ const Tile = styled("div", {
     borderRadius: Number(theme.shape.borderRadius) * 2,
     border: `1px solid ${theme.palette.divider}`,
     backgroundColor: theme.palette.background.paper,
-    cursor: "grab",
+    // Click-only tiles must not block touch scrolling of the drawer.
+    cursor: clickOnly ? "pointer" : "grab",
     userSelect: "none",
-    touchAction: "none",
+    touchAction: clickOnly ? "manipulation" : "none",
     transition: theme.transitions.create(
       ["border-color", "background-color", "box-shadow", "transform"],
       { duration: theme.transitions.duration.shorter },
@@ -78,15 +80,22 @@ type PaletteItemViewProps = HTMLAttributes<HTMLDivElement> & {
   entry: PaletteEntry;
   dragging?: boolean;
   overlay?: boolean;
+  clickOnly?: boolean;
 };
 
 /** Pure presentation. Shared by the draggable tile and the drag overlay. */
 export const PaletteItemView = forwardRef<HTMLDivElement, PaletteItemViewProps>(
-  ({ entry, dragging, overlay, ...rest }, ref) => {
+  ({ entry, dragging, overlay, clickOnly, ...rest }, ref) => {
     const Icon = entry.icon;
 
     return (
-      <Tile ref={ref} dragging={dragging} overlay={overlay} {...rest}>
+      <Tile
+        ref={ref}
+        dragging={dragging}
+        overlay={overlay}
+        clickOnly={clickOnly}
+        {...rest}
+      >
         <IconBox className="palette-icon">
           <Icon fontSize="small" />
         </IconBox>

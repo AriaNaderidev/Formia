@@ -18,11 +18,7 @@ export const DropEmptyState = ({ onBrowseFields }: DropEmptyStateProps) => {
   const isDragging = Boolean(active);
   const { setFields } = useFormBuilderActions();
 
-  const caption = isOver
-    ? "Release to add your first field"
-    : isDragging
-      ? "Drop it here"
-      : "Add a field to start building";
+  const caption = isOver ? "Release to add your first field" : "Drop it here";
 
   const applyTemplate = (template: FormTemplate) => {
     setFields(instantiateTemplate(template));
@@ -34,7 +30,7 @@ export const DropEmptyState = ({ onBrowseFields }: DropEmptyStateProps) => {
   return (
     <div
       ref={setNodeRef}
-      className={`relative m-1 min-h-0 overflow-y-auto rounded-2xl border-2 border-dashed transition-colors duration-300 ${
+      className={`relative m-1 flex min-h-0 flex-col rounded-2xl border-2 border-dashed transition-colors duration-300 ${
         isOver
           ? "border-plum bg-plum/5"
           : isDragging
@@ -42,68 +38,96 @@ export const DropEmptyState = ({ onBrowseFields }: DropEmptyStateProps) => {
             : "border-transparent"
       }`}
     >
-      <div className="mx-auto flex min-h-full w-full max-w-4xl flex-col items-center justify-center px-4 py-6 sm:px-8 sm:py-10">
-        <div
-          className="flex flex-col items-center gap-3 select-none"
-          draggable={false}
-        >
+      {/* Only opacity and scale change while dragging, so nothing reflows. */}
+      <div
+        inert={isDragging}
+        className={`min-h-0 flex-1 origin-center overflow-y-auto transition-[opacity,scale] duration-300 ease-out ${
+          isDragging ? "scale-95 opacity-0" : "scale-100 opacity-100"
+        }`}
+      >
+        <div className="mx-auto flex min-h-full w-full max-w-4xl flex-col items-center justify-center gap-y-7 px-4 py-6 sm:px-8 sm:py-10">
           <div
-            className={`transition-[scale,translate,opacity,filter] duration-300 ease-out ${
-              isOver
-                ? "-translate-y-1 scale-110 drop-shadow-xl"
-                : isDragging
-                  ? "scale-95 opacity-70"
-                  : "motion-safe:animate-float"
-            }`}
+            className="flex flex-col items-center gap-3 select-none"
+            draggable={false}
           >
-            <img
-              src={EmptyStateImage}
-              alt=""
-              // Intrinsic size lets the browser reserve the space (no layout shift);
-              // this image is the largest paint of the empty state, so fetch it first.
-              width={960}
-              height={640}
-              fetchPriority="high"
-              decoding="async"
-              className={`w-auto rounded-md object-contain transition-[height] duration-300 ease-out ${
-                isDragging ? "h-[min(45vh,22rem)]" : "h-32 sm:h-44"
-              }`}
-            />
+            <div className="motion-safe:animate-float">
+              <img
+                src={EmptyStateImage}
+                alt=""
+                // Intrinsic size lets the browser reserve the space (no layout shift);
+                // this image is the largest paint of the empty state, so fetch it first.
+                width={960}
+                height={640}
+                fetchPriority="high"
+                decoding="async"
+                className="h-32 w-auto rounded-md object-contain sm:h-44"
+              />
+            </div>
+
+            <div className="text-center">
+              <p className="text-ink text-lg font-semibold">
+                Add a field to start building
+              </p>
+              <p className="text-ink-muted text-sm">
+                Drag a field in, or click one in the field list. Or begin with a
+                template below.
+              </p>
+              <button
+                type="button"
+                onClick={onBrowseFields}
+                className="bg-plum hover:bg-plum-dark focus-visible:outline-plum mt-3 rounded-full px-4 py-2 text-sm font-medium text-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 active:scale-95 lg:hidden"
+              >
+                Browse fields
+              </button>
+            </div>
           </div>
 
-          <div className="text-center">
-            <p
-              aria-live="polite"
-              className={`text-lg font-semibold transition-colors duration-300 ${
-                isOver ? "text-plum" : "text-ink"
-              }`}
-            >
-              {caption}
-            </p>
-            <p className="text-ink-muted text-sm">
-              Drag a field in, or click one in the field list. Or begin with a template below.
-            </p>
-            <button
-              type="button"
-              onClick={onBrowseFields}
-              className="bg-plum hover:bg-plum-dark focus-visible:outline-plum mt-3 rounded-full px-4 py-2 text-sm font-medium text-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 active:scale-95 lg:hidden"
-            >
-              Browse fields
-            </button>
-          </div>
-        </div>
-
-        {/* Collapses while dragging, so the drop zone (and the image) can take the space. */}
-        <div
-          inert={isDragging}
-          className={`grid w-full transition-[grid-template-rows,opacity] duration-300 ${
-            isDragging ? "grid-rows-[0fr] opacity-0" : "grid-rows-[1fr] opacity-100"
-          }`}
-        >
-          <div className="min-h-0 overflow-hidden pt-8">
+          <div className="w-full pt-8">
             <TemplateGallery onSelect={applyTemplate} />
           </div>
         </div>
+      </div>
+
+      <div
+        aria-hidden={!isDragging}
+        className={`pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3 transition-[opacity,scale] duration-300 ease-out ${
+          isDragging ? "scale-100 opacity-100" : "scale-105 opacity-0"
+        }`}
+      >
+        {/* Dot-grid texture with a soft plum glow; fades toward the edges so the border stays clean. */}
+        <div
+          aria-hidden
+          className={`absolute inset-0 rounded-[inherit] transition-opacity duration-300 ${
+            isOver ? "opacity-100" : "opacity-60"
+          }`}
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at center, color-mix(in oklab, var(--color-plum) 14%, transparent), transparent 65%), radial-gradient(color-mix(in oklab, var(--color-plum) 28%, transparent) 1.2px, transparent 1.2px)",
+            backgroundSize: "100% 100%, 20px 20px",
+            maskImage:
+              "radial-gradient(ellipse at center, #000 35%, transparent 85%)",
+            WebkitMaskImage:
+              "radial-gradient(ellipse at center, #000 35%, transparent 85%)",
+          }}
+        />
+        <img
+          src={EmptyStateImage}
+          alt=""
+          width={960}
+          height={640}
+          decoding="async"
+          className={`h-32 w-auto rounded-md object-contain transition-[translate,scale,filter] duration-300 ease-out sm:h-44 ${
+            isOver ? "-translate-y-1 scale-110 drop-shadow-xl" : ""
+          }`}
+        />
+        <p
+          aria-live="polite"
+          className={`text-lg font-semibold transition-colors duration-300 ${
+            isOver ? "text-plum" : "text-ink"
+          }`}
+        >
+          {isDragging ? caption : ""}
+        </p>
       </div>
     </div>
   );
