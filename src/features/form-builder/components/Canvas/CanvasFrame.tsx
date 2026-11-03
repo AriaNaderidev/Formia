@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { useDndContext, useDroppable } from "@dnd-kit/core";
 import { isPaletteId } from "@/features/form-schema";
 import { CANVAS_DROPPABLE_ID } from "@/features/form-builder/hooks/dnd_config";
+import { getKeyLabel } from "../../shortcuts/shortcutList";
 
 type CanvasFrameProps = {
   count: number;
@@ -41,7 +42,7 @@ export const CanvasFrame = ({ count, children }: CanvasFrameProps) => {
           <h2 className="text-ink text-base font-semibold">Form</h2>
           <p className="text-ink-muted text-xs">
             {count} {count === 1 ? "field" : "fields"}
-            {count > 1 && " · drag to reorder"}
+            {count > 1 && ` · drag or press ${getKeyLabel("Alt").text} + ↑ ↓ to reorder`}
           </p>
         </header>
 
