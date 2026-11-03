@@ -1,7 +1,9 @@
 import { useDroppable } from "@dnd-kit/core";
 import EmptyStateImage from "@/assets/images/Empty.webp";
 import { instantiateTemplate, type FormTemplate } from "@/features/form-schema";
+import { announce } from "@/ui/announce";
 import { toast } from "@/ui/toast";
+import { focusWhenReady } from "@/utils/focus";
 import { CANVAS_DROPPABLE_ID } from "../hooks/dnd_config";
 import { useFormBuilderActions } from "../context/useFormBuilderContext";
 import { TemplateGallery } from "../templates/TemplateGallery";
@@ -22,6 +24,9 @@ export const DropEmptyState = ({ onBrowseFields }: DropEmptyStateProps) => {
 
   const applyTemplate = (template: FormTemplate) => {
     setFields(instantiateTemplate(template));
+    // The gallery is replaced by the form, so focus would drop to the page.
+    announce(`${template.title} template added with ${template.fields.length} elements.`);
+    focusWhenReady(() => document.querySelector<HTMLElement>("[data-field-trigger]"));
     toast.success(`${template.title} template added`, {
       description: "Edit any field, or press Undo to start over.",
     });

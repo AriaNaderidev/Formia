@@ -1,4 +1,4 @@
-import { useId, type ElementType } from "react";
+import { useId, type ElementType, type KeyboardEvent } from "react";
 import BadgeOutlinedIcon from "@mui/icons-material/BadgeOutlined";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
@@ -12,6 +12,7 @@ import StarBorderIcon from "@mui/icons-material/StarBorder";
 import SupportAgentOutlinedIcon from "@mui/icons-material/SupportAgentOutlined";
 import { FORM_TEMPLATES, type FormTemplate } from "@/features/form-schema";
 import { toast } from "@/ui/toast";
+import { focusWhenReady } from "@/utils/focus";
 import { userTemplates, useUserTemplates } from "./userTemplates";
 
 const ICONS: Record<string, ElementType> = {
@@ -30,6 +31,45 @@ type TemplateGalleryProps = {
   onSelect: (template: FormTemplate) => void;
 };
 
+const NAV_KEYS = new Set(["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"]);
+
+const getCards = (root: ParentNode) =>
+  Array.from(root.querySelectorAll<HTMLElement>("[data-template-card]"));
+
+/**
+ * The card an arrow key leads to. The grid has one to three columns depending on the
+ * width, so up and down are worked out from where the cards actually are: the nearest
+ * row in that direction, then the closest card within it.
+ */
+const neighbourCard = (cards: HTMLElement[], index: number, key: string) => {
+  if (key === "ArrowLeft") return cards[index - 1];
+  if (key === "ArrowRight") return cards[index + 1];
+  if (key === "Home") return cards[0];
+  if (key === "End") return cards[cards.length - 1];
+  if (key !== "ArrowUp" && key !== "ArrowDown") return undefined;
+
+  const centre = (card: HTMLElement) => {
+    const rect = card.getBoundingClientRect();
+    return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+  };
+  const from = centre(cards[index]);
+  const direction = key === "ArrowDown" ? 1 : -1;
+
+  let best: HTMLElement | undefined;
+  let bestScore = Infinity;
+  for (const card of cards) {
+    const to = centre(card);
+    const dy = (to.y - from.y) * direction;
+    if (dy < 8) continue;
+    const score = dy * 1000 + Math.abs(to.x - from.x);
+    if (score < bestScore) {
+      best = card;
+      bestScore = score;
+    }
+  }
+  return best;
+};
+
 const TemplateCard = ({
   template,
   index,
@@ -46,7 +86,20 @@ const TemplateCard = ({
   const remove = () => {
     const all = userTemplates.getAll();
     const position = all.findIndex((item) => item.id === template.id);
+
+    // The card is about to disappear: keep keyboard focus on a neighbour.
+    const cards = getCards(document);
+    const current = cards.findIndex((card) => card.dataset.templateId === template.id);
+    const neighbour = cards[current + 1] ?? cards[current - 1];
+    const hadFocus = current !== -1 && cards[current] === document.activeElement;
+
     userTemplates.remove(template.id);
+    if (hadFocus && neighbour) {
+      const id = neighbour.dataset.templateId;
+      focusWhenReady(() =>
+        document.querySelector<HTMLElement>(`[data-template-id="${id}"]`),
+      );
+    }
     toast.info(`Deleted “${template.title}”`, {
       duration: 6000,
       action: { label: "Undo", onClick: () => userTemplates.restore(template, position) },
@@ -60,7 +113,17 @@ const TemplateCard = ({
     >
       <button
         type="button"
+        data-template-card
+        data-template-id={template.id}
         aria-describedby={metaId}
+        aria-keyshortcuts={template.custom ? "Delete" : undefined}
+        onKeyDown={(event) => {
+          const plain = !event.altKey && !event.ctrlKey && !event.metaKey;
+          if (template.custom && plain && (event.key === "Delete" || event.key === "Backspace")) {
+            event.preventDefault();
+            remove();
+          }
+        }}
         onClick={() => onSelect(template)}
         className="border-line hover:border-plum/60 focus-visible:outline-plum flex h-full w-full items-start gap-3 rounded-2xl border bg-white p-3.5 text-start shadow-sm transition-[border-color,box-shadow,translate,scale] duration-200 hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-2 active:scale-[0.98]"
       >
@@ -129,8 +192,24 @@ const Group = ({
 export const TemplateGallery = ({ onSelect }: TemplateGalleryProps) => {
   const custom = useUserTemplates();
 
+  /** Arrow keys, Home and End walk the cards; Tab still reaches each one too. */
+  const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
+    const cards = getCards(event.currentTarget);
+    const index = cards.findIndex((card) => card === document.activeElement);
+    if (index === -1) return;
+
+    if (!NAV_KEYS.has(event.key)) return;
+    event.preventDefault();
+    neighbourCard(cards, index, event.key)?.focus();
+  };
+
   return (
-    <section aria-labelledby="template-gallery-title" className="flex w-full flex-col gap-5">
+    <section
+      aria-labelledby="template-gallery-title"
+      onKeyDown={onKeyDown}
+      className="flex w-full flex-col gap-5"
+    >
       <div>
         <h2 id="template-gallery-title" className="text-ink text-base font-semibold">
           Start from a template
