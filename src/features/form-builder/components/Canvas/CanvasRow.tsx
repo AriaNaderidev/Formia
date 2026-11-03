@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useCallback, useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { RowContent } from "./RowContent";
@@ -32,6 +32,22 @@ export const CanvasRow = memo(function CanvasRow({
     isDragging,
   } = useSortable({ id: row.key, transition: SORT_TRANSITION });
 
+  // When every card of the row is leaving, the row fades as a whole so the handle and
+  // the "+" go with it. State lives here so row and cards switch on the same render.
+  const [leavingIds, setLeavingIds] = useState<string[]>([]);
+  const onLeavingChange = useCallback((id: string, leaving: boolean) => {
+    setLeavingIds((prev) =>
+      leaving
+        ? prev.includes(id)
+          ? prev
+          : [...prev, id]
+        : prev.filter((item) => item !== id),
+    );
+  }, []);
+  const isRowLeaving = row.fields.every((field) =>
+    leavingIds.includes(field.id),
+  );
+
   return (
     <div
       ref={setNodeRef}
@@ -40,18 +56,28 @@ export const CanvasRow = memo(function CanvasRow({
         transition,
         willChange: isDragging ? "transform" : undefined,
       }}
+      data-flip={row.key}
       className={`group/row relative select-none ${isDragging ? "z-30" : ""}`}
     >
-      <RowDropIndicator rowKey={row.key} />
-      <RowContent
-        row={row}
-        isDragging={isDragging}
-        isBesideOpen={openMenuKey === `${row.key}:beside`}
-        setOpenMenuKey={setOpenMenuKey}
-        setActivatorNodeRef={setActivatorNodeRef}
-        attributes={attributes}
-        listeners={listeners}
-      />
+      <div
+        className={`transition-opacity duration-150 ease-out motion-reduce:transition-none ${
+          isRowLeaving ? "pointer-events-none opacity-0" : ""
+        }`}
+      >
+        <RowDropIndicator rowKey={row.key} />
+        <RowContent
+          row={row}
+          isDragging={isDragging}
+          isBesideOpen={openMenuKey === `${row.key}:beside`}
+          setOpenMenuKey={setOpenMenuKey}
+          leavingIds={leavingIds}
+          isRowLeaving={isRowLeaving}
+          onLeavingChange={onLeavingChange}
+          setActivatorNodeRef={setActivatorNodeRef}
+          attributes={attributes}
+          listeners={listeners}
+        />
+      </div>
     </div>
   );
 });

@@ -3,6 +3,7 @@ import type { FormField } from "@/features/form-schema";
 import { toast } from "@/ui/toast";
 import { useFormBuilderActions } from "../../context/useFormBuilderContext";
 import { FieldActions } from "./FieldActions";
+import { recordRowPositions } from "./rowShift";
 import { PALETTE_META } from "../Palette/palette_config";
 
 // The editor is only needed once a field is opened, so it loads on first use.
@@ -12,24 +13,31 @@ const FieldEditDialog = lazy(() =>
   })),
 );
 
-const LEAVE_MS = 200;
+// Keep in sync with the fade durations here and in CanvasRow.
+const LEAVE_MS = 150;
 
 type FieldCardProps = {
   field: FormField;
   /** The row this card belongs to is being dragged. */
   isDragging: boolean;
+  /** Playing the exit animation; the field is removed when it ends. */
+  isLeaving: boolean;
+  /** The whole row is fading, so the card must not fade a second time. */
+  rowLeaving: boolean;
+  onLeavingChange: (id: string, leaving: boolean) => void;
 };
 
 export const FieldCard = memo(function FieldCard({
   field,
   isDragging,
+  isLeaving,
+  rowLeaving,
+  onLeavingChange,
 }: FieldCardProps) {
   const { setFields, getFields } = useFormBuilderActions();
   const [isEditOpen, setIsEditOpen] = useState(false);
   // The dialog (and its form) is only created after the first time it is opened.
   const [hasOpened, setHasOpened] = useState(false);
-  // Playing the exit animation; the field is removed when it ends.
-  const [isLeaving, setIsLeaving] = useState(false);
 
   const meta = PALETTE_META[field.type];
   const Icon = meta.icon;
@@ -42,13 +50,17 @@ export const FieldCard = memo(function FieldCard({
     setIsEditOpen(true);
   }, []);
   const closeEditor = useCallback(() => setIsEditOpen(false), []);
-  const startDelete = useCallback(() => setIsLeaving(true), []);
+  const startDelete = useCallback(
+    () => onLeavingChange(field.id, true),
+    [field.id, onLeavingChange],
+  );
 
   const finishDelete = useCallback(() => {
     const index = getFields().findIndex((item) => item.id === field.id);
     if (index === -1) return;
     const removed = getFields()[index];
 
+    recordRowPositions();
     setFields((prev) => prev.filter((item) => item.id !== field.id));
     toast.info(`Deleted “${title}”`, {
       duration: 6000,
@@ -65,6 +77,12 @@ export const FieldCard = memo(function FieldCard({
       },
     });
   }, [field.id, getFields, setFields, title]);
+
+  // Once removed, forget the id so an undo brings the card back in its normal state.
+  useEffect(
+    () => () => onLeavingChange(field.id, false),
+    [field.id, onLeavingChange],
+  );
 
   // A timer rather than transitionend: with reduced motion there is no transition to end.
   useEffect(() => {
@@ -84,16 +102,18 @@ export const FieldCard = memo(function FieldCard({
 
   return (
     <>
-      {/* The outer grid collapses the card's height smoothly while it is deleted. */}
+      {/* Leaving only fades and scales (no layout); what is below slides up afterwards,
+          see rowShift. */}
       <div
         id={`field-card-${field.id}`}
-        className={`animate-pop-in grid transition-[grid-template-rows,opacity,scale] duration-200 ease-out motion-reduce:transition-none ${
+        data-flip={`card:${field.id}`}
+        className={`animate-pop-in transition-[opacity,scale] duration-150 ease-out motion-reduce:transition-none ${
           isLeaving
-            ? "pointer-events-none scale-95 grid-rows-[0fr] opacity-0"
-            : "grid-rows-[1fr]"
+            ? `pointer-events-none scale-95 ${rowLeaving ? "" : "opacity-0"}`
+            : ""
         }`}
       >
-        <div className="min-h-0">
+        <div>
           <div
             className={`flex min-w-0 items-center gap-1 rounded-xl border bg-white py-2 ps-2 pe-1 transition-[border-color,box-shadow,translate,scale] duration-200 ${cardState}`}
           >

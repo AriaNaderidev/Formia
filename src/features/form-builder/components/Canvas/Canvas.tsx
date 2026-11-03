@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useState } from "react";
 import {
   SortableContext,
   verticalListSortingStrategy,
@@ -6,6 +6,7 @@ import {
 import { useFormBuilderContext } from "@/features/form-builder/context/useFormBuilderContext";
 import { CanvasFrame } from "./CanvasFrame";
 import { CanvasRow } from "./CanvasRow";
+import { playRowShift } from "./rowShift";
 import { groupIntoRows } from "@/utils/rows_helper";
 
 export const Canvas = () => {
@@ -14,6 +15,9 @@ export const Canvas = () => {
 
   const rows = useMemo(() => groupIntoRows(fields), [fields]);
   const rowKeys = useMemo(() => rows.map((row) => row.key), [rows]);
+
+  // After a deletion commits, slide the rows below into the gap (no-op otherwise).
+  useLayoutEffect(playRowShift, [rows]);
 
   return (
     <CanvasFrame count={fields.length}>

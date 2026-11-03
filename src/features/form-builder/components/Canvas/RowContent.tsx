@@ -18,6 +18,9 @@ type RowContentProps = {
   isDragging: boolean;
   isBesideOpen: boolean;
   setOpenMenuKey: (key: string | null) => void;
+  leavingIds: string[];
+  isRowLeaving: boolean;
+  onLeavingChange: (id: string, leaving: boolean) => void;
   setActivatorNodeRef: (element: HTMLElement | null) => void;
   attributes: DraggableAttributes;
   listeners: DraggableSyntheticListeners;
@@ -37,6 +40,9 @@ export const RowContent = memo(function RowContent({
   isDragging,
   isBesideOpen,
   setOpenMenuKey,
+  leavingIds,
+  isRowLeaving,
+  onLeavingChange,
   setActivatorNodeRef,
   attributes,
   listeners,
@@ -72,7 +78,14 @@ export const RowContent = memo(function RowContent({
             }`}
           >
             {row.fields.map((field) => (
-              <FieldCard key={field.id} field={field} isDragging={isDragging} />
+              <FieldCard
+                key={field.id}
+                field={field}
+                isDragging={isDragging}
+                isLeaving={leavingIds.includes(field.id)}
+                rowLeaving={isRowLeaving}
+                onLeavingChange={onLeavingChange}
+              />
             ))}
           </div>
         </div>
