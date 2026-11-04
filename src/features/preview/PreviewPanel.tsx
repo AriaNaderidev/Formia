@@ -1,15 +1,35 @@
-import { lazy, Suspense, useDeferredValue, useState, type ReactNode } from "react";
+import {
+  lazy,
+  Suspense,
+  useDeferredValue,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 import CodeRoundedIcon from "@mui/icons-material/CodeRounded";
 import DataObjectRoundedIcon from "@mui/icons-material/DataObjectRounded";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import { useFormBuilderContext } from "../form-builder/context/useFormBuilderContext";
+import { warmFormatter } from "@/features/codegen";
 import { SegmentedControl } from "@/ui/SegmentedControl";
 import { oneOf, useLocalStorageState } from "@/utils/useLocalStorageState";
 import { PreviewTab } from "./tabs/PreviewTab";
 
 // Syntax highlighting and Prettier are heavy and only needed on these tabs.
-const SchemaTab = lazy(() => import("./tabs/SchemaTab"));
-const CodeTab = lazy(() => import("./tabs/CodeTab"));
+const loadSchemaTab = () => import("./tabs/SchemaTab");
+const loadCodeTab = () => import("./tabs/CodeTab");
+const SchemaTab = lazy(loadSchemaTab);
+const CodeTab = lazy(loadCodeTab);
+
+/**
+ * Fetches the lazy tabs (and starts the Prettier worker) once the app is idle. A chunk that is
+ * only requested on first open fails if the connection is gone by then; this fetches it while online.
+ */
+const prefetchTabs = () => {
+  void loadSchemaTab();
+  void loadCodeTab();
+  warmFormatter();
+};
 
 type TabId = "preview" | "schema" | "code";
 const ID = "preview-panel";
@@ -77,6 +97,16 @@ export const PreviewPanel = () => {
     oneOf("preview", "schema", "code"),
   );
   const [visited, setVisited] = useState<Set<TabId>>(() => new Set([active]));
+
+  useEffect(() => {
+    // Safari has no requestIdleCallback.
+    if ("requestIdleCallback" in window) {
+      const handle = window.requestIdleCallback(prefetchTabs, { timeout: 5000 });
+      return () => window.cancelIdleCallback(handle);
+    }
+    const timer = globalThis.setTimeout(prefetchTabs, 2000);
+    return () => globalThis.clearTimeout(timer);
+  }, []);
 
   const open = (tab: TabId) => {
     setActive(tab);
