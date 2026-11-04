@@ -16,7 +16,6 @@ import {
   SCREEN_READER_INSTRUCTIONS,
 } from "./hooks/dndAccessibility";
 import { useGlobalShortcuts } from "./shortcuts/useGlobalShortcuts";
-import { ShortcutsButton } from "./shortcuts/ShortcutsButton";
 import { ShortcutsDialog } from "./shortcuts/ShortcutsDialog";
 import { SkipLinks } from "./shortcuts/SkipLinks";
 import { MAIN_ID } from "@/utils/focus";
@@ -118,6 +117,7 @@ export const FormBuilderPage = () => {
             canRedo={canRedo}
             savedAt={savedAt}
             onOpenFields={openDrawer}
+            onOpenShortcuts={openHelp}
           />
 
           <div className="hidden min-h-0 overflow-hidden lg:block">
@@ -185,7 +185,6 @@ export const FormBuilderPage = () => {
         </DragOverlay>
       </DndContext>
 
-      <ShortcutsButton onClick={openHelp} />
       <ShortcutsDialog open={helpOpen} onClose={closeHelp} />
     </FormBuilderProvider>
   );

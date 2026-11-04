@@ -1,5 +1,6 @@
 import { useRef, useState, type ReactNode } from "react";
 import BookmarkAddOutlinedIcon from "@mui/icons-material/BookmarkAddOutlined";
+import KeyboardOutlinedIcon from "@mui/icons-material/KeyboardOutlined";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import CloudDoneOutlinedIcon from "@mui/icons-material/CloudDoneOutlined";
 import DeleteSweepOutlinedIcon from "@mui/icons-material/DeleteSweepOutlined";
@@ -29,6 +30,7 @@ type AppHeaderProps = {
   savedAt: number | null;
   /** Opens the field list. Only offered where the palette isn't always visible. */
   onOpenFields: () => void;
+  onOpenShortcuts: () => void;
 };
 
 const Shortcut = ({ label, keys }: { label: string; keys: string }) => (
@@ -78,6 +80,7 @@ export const AppHeader = ({
   canRedo,
   savedAt,
   onOpenFields,
+  onOpenShortcuts,
 }: AppHeaderProps) => {
   const [saveOpen, setSaveOpen] = useState(false);
   const { fields, setFields, getFields } = useFormBuilderContext();
@@ -222,6 +225,17 @@ export const AppHeader = ({
           disabled={isEmpty}
         >
           <DeleteSweepOutlinedIcon fontSize="small" />
+        </ToolButton>
+
+        <span aria-hidden className="bg-line mx-1.5 h-5 w-px" />
+
+        <ToolButton
+          label="Keyboard shortcuts"
+          tooltip={<Shortcut label="Keyboard shortcuts" keys="?" />}
+          shortcut="Shift+? Control+/ Meta+/"
+          onClick={onOpenShortcuts}
+        >
+          <KeyboardOutlinedIcon fontSize="small" />
         </ToolButton>
 
         <input
