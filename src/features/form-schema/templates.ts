@@ -1,5 +1,6 @@
 import { createFieldFromType, createFieldId } from "./createField";
-import type { FieldType, FormField } from "./types";
+import { STRUCTURED_TEMPLATES } from "./templatesStructured";
+import type { FieldType, FormDirection, FormField } from "./types";
 
 type TemplateField = { type: FieldType; pairWithPrevious?: boolean } & Partial<
   Omit<FormField, "id" | "type">
@@ -10,11 +11,13 @@ export type FormTemplate = {
   title: string;
   description: string;
   fields: TemplateField[];
+  /** Applied with the template. Left out for left-to-right. */
+  direction?: FormDirection;
   /** Saved by the user (and deletable), as opposed to shipped with the app. */
   custom?: boolean;
 };
 
-export const FORM_TEMPLATES: FormTemplate[] = [
+const BASIC_TEMPLATES: FormTemplate[] = [
   {
     id: "contact",
     title: "Contact",
@@ -300,6 +303,12 @@ export const FORM_TEMPLATES: FormTemplate[] = [
   },
 ];
 
+export const FORM_TEMPLATES: FormTemplate[] = [...BASIC_TEMPLATES, ...STRUCTURED_TEMPLATES];
+
+/** Tabs, sections and their closing markers are structure, not elements the user adds. */
+export const countElements = (template: FormTemplate) =>
+  template.fields.filter((field) => field.type !== "end").length;
+
 /** A template's fields with fresh ids; `pairWithPrevious` puts two fields in one row. */
 export const instantiateTemplate = (template: FormTemplate): FormField[] => {
   const fields: FormField[] = [];
@@ -325,11 +334,13 @@ export const templateFromFields = (
   title: string,
   description: string,
   fields: FormField[],
+  direction: FormDirection = "ltr",
 ): FormTemplate => ({
   id: createFieldId(),
   title,
   description,
   custom: true,
+  ...(direction === "rtl" ? { direction } : {}),
   fields: fields.map((field, index) => {
     const { rowId, ...rest }: Omit<FormField, "id"> & { id?: string } = structuredClone(field);
     delete rest.id;

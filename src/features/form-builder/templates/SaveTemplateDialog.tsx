@@ -24,7 +24,7 @@ const paperSlot = { component: "form", noValidate: true } as const;
 
 /** Saves the current form so it shows up under "Your templates" on the empty canvas. */
 export const SaveTemplateDialog = ({ open, onClose }: SaveTemplateDialogProps) => {
-  const { getFields } = useFormBuilderContext();
+  const { getFields, getDirection } = useFormBuilderContext();
   const titleId = useId();
   const nameInput = useRef<HTMLInputElement>(null);
   const [title, setTitle] = useState("");
@@ -39,7 +39,9 @@ export const SaveTemplateDialog = ({ open, onClose }: SaveTemplateDialogProps) =
     setTouched(true);
     if (!trimmed) return;
 
-    const saved = userTemplates.add(templateFromFields(trimmed, description.trim(), getFields()));
+    const saved = userTemplates.add(
+      templateFromFields(trimmed, description.trim(), getFields(), getDirection()),
+    );
     if (saved) {
       toast.success("Template saved", {
         description: "Find it under “Your templates” when the canvas is empty.",

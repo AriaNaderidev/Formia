@@ -32,6 +32,7 @@ export { toFormSchema, parseFormSchema } from "./toFormSchema";
 export * from "./fieldSpec";
 export * from "./zodPlan";
 export {
+  countElements,
   FORM_TEMPLATES,
   instantiateTemplate,
   templateFromFields,
