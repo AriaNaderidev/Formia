@@ -98,6 +98,26 @@ export const useFieldsHistory = () => {
     return () => window.clearTimeout(timer);
   }, [fields]);
 
+  // A refresh, update or tab close inside the debounce window would drop the last edit.
+  useEffect(() => {
+    const flush = () => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, fields: fieldsRef.current }));
+      } catch {
+        /* storage full or blocked */
+      }
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") flush();
+    };
+    window.addEventListener("pagehide", flush);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("pagehide", flush);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, []);
+
   return {
     fields,
     setFields,
