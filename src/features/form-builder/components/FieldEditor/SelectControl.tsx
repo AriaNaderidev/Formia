@@ -11,6 +11,8 @@ type SelectControlProps = {
   options: SelectOption[];
   multiple?: boolean;
   helperText?: string;
+  /** Runs after the value changes, for settings that drive another setting. */
+  onValueChange?: (value: string) => void;
 };
 
 export const SelectControl = ({
@@ -19,6 +21,7 @@ export const SelectControl = ({
   options,
   multiple = false,
   helperText,
+  onValueChange,
 }: SelectControlProps) => {
   const { control } = useFormContext<EditorValues>();
   const { field, fieldState } = useController({ control, name });
@@ -40,7 +43,10 @@ export const SelectControl = ({
       label={label}
       name={field.name}
       value={value}
-      onChange={field.onChange}
+      onChange={(event) => {
+        field.onChange(event);
+        onValueChange?.(event.target.value);
+      }}
       onBlur={field.onBlur}
       inputRef={field.ref}
       error={Boolean(fieldState.error)}

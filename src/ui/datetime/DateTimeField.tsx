@@ -41,6 +41,8 @@ type DateTimeFieldProps = {
   disabled?: boolean;
   error?: boolean;
   helperText?: ReactNode;
+  /** Shown while empty. Defaults to "Select a date" and the like. */
+  placeholder?: string;
   id?: string;
   inputRef?: Ref<HTMLInputElement>;
   describedBy?: string;
@@ -75,6 +77,7 @@ export const DateTimeField = ({
   disabled,
   error,
   helperText,
+  placeholder,
   id,
   inputRef,
   describedBy,
@@ -153,7 +156,7 @@ export const DateTimeField = ({
             inputLabel: { shrink: true },
             htmlInput: {
               readOnly: true,
-              placeholder: copy.placeholder,
+              placeholder: placeholder || copy.placeholder,
               "aria-haspopup": "dialog",
               "aria-expanded": open,
               "aria-describedby": describedBy,

@@ -99,7 +99,7 @@ export const Toaster = () => {
   return createPortal(
     <ol
       aria-label="Notifications"
-      className="pointer-events-none fixed inset-x-4 bottom-4 z-[1500] flex flex-col items-end gap-2.5 sm:inset-x-auto sm:end-5 sm:bottom-5"
+      className="pointer-events-none fixed inset-x-4 bottom-4 z-[1500] flex flex-col items-end gap-2.5 sm:inset-x-auto sm:end-5"
     >
       {items.map((item) => (
         <ToastCard key={item.id} item={item} />

@@ -1,4 +1,4 @@
-import { useId, useState, type FormEvent } from "react";
+import { useId, useRef, useState, type FormEvent } from "react";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
@@ -24,8 +24,9 @@ const paperSlot = { component: "form", noValidate: true } as const;
 
 /** Saves the current form so it shows up under "Your templates" on the empty canvas. */
 export const SaveTemplateDialog = ({ open, onClose }: SaveTemplateDialogProps) => {
-  const { getFields } = useFormBuilderContext();
+  const { getFields, getDirection } = useFormBuilderContext();
   const titleId = useId();
+  const nameInput = useRef<HTMLInputElement>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [touched, setTouched] = useState(false);
@@ -38,7 +39,9 @@ export const SaveTemplateDialog = ({ open, onClose }: SaveTemplateDialogProps) =
     setTouched(true);
     if (!trimmed) return;
 
-    const saved = userTemplates.add(templateFromFields(trimmed, description.trim(), getFields()));
+    const saved = userTemplates.add(
+      templateFromFields(trimmed, description.trim(), getFields(), getDirection()),
+    );
     if (saved) {
       toast.success("Template saved", {
         description: "Find it under “Your templates” when the canvas is empty.",
@@ -62,6 +65,8 @@ export const SaveTemplateDialog = ({ open, onClose }: SaveTemplateDialogProps) =
         paper: { ...paperSlot, onSubmit: submit },
         // Start fresh every time, so the previous name doesn't linger.
         transition: {
+          // `autoFocus` loses to the dialog's own focus handling, which lands on the frame.
+          onEntered: () => nameInput.current?.focus(),
           onExited: () => {
             setTitle("");
             setDescription("");
@@ -77,7 +82,7 @@ export const SaveTemplateDialog = ({ open, onClose }: SaveTemplateDialogProps) =
         </DialogContentText>
         <Stack spacing={2}>
           <TextField
-            autoFocus
+            inputRef={nameInput}
             required
             label="Template name"
             value={title}

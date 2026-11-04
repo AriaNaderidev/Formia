@@ -10,6 +10,15 @@ import { FormBuilderProvider } from "./context/FormBuilderProvider";
 import { useFormBuilderDnd } from "./hooks/useFormBuilderDnd";
 import { useFieldsHistory } from "./hooks/useFieldsHistory";
 import { useUndoShortcuts } from "./hooks/useUndoShortcuts";
+import { useRegionFocus } from "./hooks/useRegionFocus";
+import {
+  createAnnouncements,
+  SCREEN_READER_INSTRUCTIONS,
+} from "./hooks/dndAccessibility";
+import { useGlobalShortcuts } from "./shortcuts/useGlobalShortcuts";
+import { ShortcutsDialog } from "./shortcuts/ShortcutsDialog";
+import { SkipLinks } from "./shortcuts/SkipLinks";
+import { MAIN_ID } from "@/utils/focus";
 import { Palette, PaletteItemPreview } from "./components/Palette";
 import { PreviewPanel } from "../preview/PreviewPanel";
 import { DropEmptyState } from "./components/DropEmptyState";
@@ -32,8 +41,19 @@ const PANES = [
 ];
 
 export const FormBuilderPage = () => {
-  const { fields, setFields, getFields, undo, redo, canUndo, canRedo, savedAt } =
-    useFieldsHistory();
+  const {
+    fields,
+    setFields,
+    getFields,
+    direction,
+    setDirection,
+    getDirection,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    savedAt,
+  } = useFieldsHistory();
   const { activeId, handleDragStart, handleDragEnd, handleDragCancel } =
     useFormBuilderDnd(setFields);
   const sensors = useFormBuilderSensors();
@@ -50,10 +70,38 @@ export const FormBuilderPage = () => {
     setPane("build");
   }, []);
 
+  const [helpOpen, setHelpOpen] = useState(false);
+  const openHelp = useCallback(() => setHelpOpen(true), []);
+  const closeHelp = useCallback(() => setHelpOpen(false), []);
+  const toggleHelp = useCallback(() => setHelpOpen((open) => !open), []);
+
+  const { focusSearch, focusFields, focusCanvas, focusTemplates, focusPreview } = useRegionFocus({
+    hasPaletteColumn,
+    hasFields: fields.length > 0,
+    openDrawer,
+    showPane: setPane,
+  });
+  useGlobalShortcuts({
+    toggleHelp,
+    focusSearch,
+    focusFields,
+    focusCanvas,
+    focusTemplates,
+    focusPreview,
+  });
+
+  const accessibility = useMemo(
+    () => ({
+      announcements: createAnnouncements(getFields),
+      screenReaderInstructions: SCREEN_READER_INSTRUCTIONS,
+    }),
+    [getFields],
+  );
+
   // A new object every render would re-render every context consumer.
   const contextValue = useMemo(
-    () => ({ fields, setFields, getFields }),
-    [fields, setFields, getFields],
+    () => ({ fields, setFields, getFields, direction, setDirection, getDirection }),
+    [fields, setFields, getFields, direction, setDirection, getDirection],
   );
 
   return (
@@ -62,10 +110,16 @@ export const FormBuilderPage = () => {
         sensors={sensors}
         collisionDetection={formBuilderCollision}
         modifiers={[restrictReorderToYAxis]}
+        accessibility={accessibility}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         onDragCancel={handleDragCancel}
       >
+        <SkipLinks
+          onFields={focusFields}
+          onCanvas={focusCanvas}
+          onPreview={focusPreview}
+        />
         <div className="grid h-full min-h-0 grid-cols-[minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)] lg:grid-cols-[15rem_minmax(0,1fr)]">
           <AppHeader
             undo={undo}
@@ -74,6 +128,7 @@ export const FormBuilderPage = () => {
             canRedo={canRedo}
             savedAt={savedAt}
             onOpenFields={openDrawer}
+            onOpenShortcuts={openHelp}
           />
 
           <div className="hidden min-h-0 overflow-hidden lg:block">
@@ -81,7 +136,11 @@ export const FormBuilderPage = () => {
           </div>
 
           {fields.length > 0 ? (
-            <main className="animate-fade-in grid min-h-0 min-w-0 grid-cols-1 grid-rows-[auto_minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_minmax(24rem,30rem)] xl:grid-rows-1">
+            <main
+              id={MAIN_ID}
+              tabIndex={-1}
+              className="animate-fade-in grid min-h-0 min-w-0 grid-cols-1 grid-rows-[auto_minmax(0,1fr)] outline-none xl:grid-cols-[minmax(0,1fr)_minmax(24rem,30rem)] xl:grid-rows-1"
+            >
               <div className="px-3 pt-3 sm:px-4 xl:hidden">
                 <SegmentedControl
                   ariaLabel="Workspace view"
@@ -103,7 +162,13 @@ export const FormBuilderPage = () => {
               </div>
             </main>
           ) : (
-            <DropEmptyState onBrowseFields={openDrawer} />
+            <main
+              id={MAIN_ID}
+              tabIndex={-1}
+              className="grid min-h-0 min-w-0 grid-cols-[minmax(0,1fr)] grid-rows-[minmax(0,1fr)] outline-none"
+            >
+              <DropEmptyState onBrowseFields={openDrawer} />
+            </main>
           )}
         </div>
 
@@ -130,6 +195,8 @@ export const FormBuilderPage = () => {
           ) : null}
         </DragOverlay>
       </DndContext>
+
+      <ShortcutsDialog open={helpOpen} onClose={closeHelp} />
     </FormBuilderProvider>
   );
 };

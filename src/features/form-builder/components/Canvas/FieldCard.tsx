@@ -1,8 +1,28 @@
-import { lazy, memo, Suspense, useCallback, useEffect, useState } from "react";
+import {
+  lazy,
+  memo,
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
 import type { FormField } from "@/features/form-schema";
+import { announce } from "@/ui/announce";
 import { toast } from "@/ui/toast";
+import { fieldTriggerId, focusById, MAIN_ID } from "@/utils/focus";
+import {
+  findContainerEnd,
+  groupIntoRows,
+  isContainerStart,
+  shiftRowOf,
+} from "@/utils/rows_helper";
 import { useFormBuilderActions } from "../../context/useFormBuilderContext";
 import { FieldActions } from "./FieldActions";
+import { getFieldTitle } from "./fieldTitle";
+import { recordRowPositions } from "./rowShift";
 import { PALETTE_META } from "../Palette/palette_config";
 
 // The editor is only needed once a field is opened, so it loads on first use.
@@ -12,29 +32,42 @@ const FieldEditDialog = lazy(() =>
   })),
 );
 
-const LEAVE_MS = 200;
+// Keep in sync with the fade durations here and in CanvasRow.
+const LEAVE_MS = 150;
 
 type FieldCardProps = {
   field: FormField;
   /** The row this card belongs to is being dragged. */
   isDragging: boolean;
+  /** Playing the exit animation; the field is removed when it ends. */
+  isLeaving: boolean;
+  /** The whole row is fading, so the card must not fade a second time. */
+  rowLeaving: boolean;
+  onLeavingChange: (id: string, leaving: boolean) => void;
+  /** Shown before the title: the row's drag handle. */
+  leading?: ReactNode;
+  /** Shown with the card's actions: "add a field beside". */
+  trailing?: ReactNode;
 };
 
 export const FieldCard = memo(function FieldCard({
   field,
   isDragging,
+  isLeaving,
+  rowLeaving,
+  onLeavingChange,
+  leading,
+  trailing,
 }: FieldCardProps) {
   const { setFields, getFields } = useFormBuilderActions();
   const [isEditOpen, setIsEditOpen] = useState(false);
   // The dialog (and its form) is only created after the first time it is opened.
   const [hasOpened, setHasOpened] = useState(false);
-  // Playing the exit animation; the field is removed when it ends.
-  const [isLeaving, setIsLeaving] = useState(false);
 
   const meta = PALETTE_META[field.type];
   const Icon = meta.icon;
-  // Content elements have no label; their text identifies them better than their type.
-  const title = field.name || field.content?.trim() || meta.title;
+  const title = getFieldTitle(field);
+  const cardRef = useRef<HTMLDivElement>(null);
   const isRequired = Boolean(field.validation?.required);
 
   const openEditor = useCallback(() => {
@@ -42,29 +75,89 @@ export const FieldCard = memo(function FieldCard({
     setIsEditOpen(true);
   }, []);
   const closeEditor = useCallback(() => setIsEditOpen(false), []);
-  const startDelete = useCallback(() => setIsLeaving(true), []);
+  const startDelete = useCallback(
+    () => onLeavingChange(field.id, true),
+    [field.id, onLeavingChange],
+  );
 
   const finishDelete = useCallback(() => {
     const index = getFields().findIndex((item) => item.id === field.id);
     if (index === -1) return;
     const removed = getFields()[index];
+    // Deleting a tab or section removes the area but keeps the fields inside it.
+    const endIndex = isContainerStart(removed.type) ? findContainerEnd(getFields(), index) : -1;
+    const removedEnd = endIndex === -1 ? undefined : getFields()[endIndex];
 
-    setFields((prev) => prev.filter((item) => item.id !== field.id));
+    // The card is about to disappear: keyboard focus would fall back to <body>.
+    const neighbour = getFields()[index + 1] ?? getFields()[index - 1];
+    const hadFocus = cardRef.current?.contains(document.activeElement) ?? false;
+
+    recordRowPositions();
+    setFields((prev) =>
+      prev.filter((item) => item.id !== field.id && item.id !== removedEnd?.id),
+    );
+    if (hadFocus) focusById(neighbour ? fieldTriggerId(neighbour.id) : MAIN_ID);
+
     toast.info(`Deleted “${title}”`, {
+      description: removedEnd ? "The fields inside were kept." : undefined,
       duration: 6000,
       action: {
         label: "Undo",
         // Put it back exactly where it was, pairing included (rows are re-normalized).
-        onClick: () =>
+        onClick: () => {
           setFields((prev) => {
             if (prev.some((item) => item.id === removed.id)) return prev;
             const next = [...prev];
             next.splice(Math.min(index, next.length), 0, removed);
+            if (removedEnd) next.splice(Math.min(endIndex, next.length), 0, removedEnd);
             return next;
-          }),
+          });
+          focusById(fieldTriggerId(removed.id));
+        },
       },
     });
   }, [field.id, getFields, setFields, title]);
+
+  const moveRowBy = (delta: -1 | 1) => {
+    const before = getFields();
+    const after = shiftRowOf(before, field.id, delta);
+    if (after === before) {
+      announce(delta < 0 ? `${title} is already in the first row.` : `${title} is already in the last row.`);
+      return;
+    }
+
+    setFields(after);
+    const rows = groupIntoRows(after);
+    const position = rows.findIndex((row) => row.fields.some((item) => item.id === field.id));
+    announce(`${title} moved to row ${position + 1} of ${rows.length}.`);
+    // React moves the row's DOM node, which drops focus.
+    focusById(fieldTriggerId(field.id));
+  };
+
+  const onKeyDown = (event: KeyboardEvent) => {
+    if (event.defaultPrevented || isLeaving) return;
+
+    if (event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
+      if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+        event.preventDefault();
+        moveRowBy(event.key === "ArrowUp" ? -1 : 1);
+      }
+    } else if (
+      (event.key === "Delete" || event.key === "Backspace") &&
+      !event.ctrlKey &&
+      !event.metaKey &&
+      !event.altKey
+    ) {
+      event.preventDefault();
+      startDelete();
+    }
+  };
+
+  // Once removed, forget the id so an undo brings the card back in its normal state.
+  useEffect(
+    () => () => onLeavingChange(field.id, false),
+    [field.id, onLeavingChange],
+  );
 
   // A timer rather than transitionend: with reduced motion there is no transition to end.
   useEffect(() => {
@@ -84,24 +177,32 @@ export const FieldCard = memo(function FieldCard({
 
   return (
     <>
-      {/* The outer grid collapses the card's height smoothly while it is deleted. */}
+      {/* Leaving only fades and scales (no layout); what is below slides up afterwards,
+          see rowShift. */}
       <div
         id={`field-card-${field.id}`}
-        className={`animate-pop-in grid transition-[grid-template-rows,opacity,scale] duration-200 ease-out motion-reduce:transition-none ${
+        data-flip={`card:${field.id}`}
+        className={`animate-pop-in transition-[opacity,scale] duration-150 ease-out motion-reduce:transition-none ${
           isLeaving
-            ? "pointer-events-none scale-95 grid-rows-[0fr] opacity-0"
-            : "grid-rows-[1fr]"
+            ? `pointer-events-none scale-95 ${rowLeaving ? "" : "opacity-0"}`
+            : ""
         }`}
       >
-        <div className="min-h-0">
+        <div>
           <div
-            className={`flex min-w-0 items-center gap-1 rounded-xl border bg-white py-2 ps-2 pe-1 transition-[border-color,box-shadow,translate,scale] duration-200 ${cardState}`}
+            ref={cardRef}
+            onKeyDown={onKeyDown}
+            className={`flex min-w-0 items-center gap-1 rounded-xl border bg-white py-2 ps-1 pe-1 transition-[border-color,box-shadow,translate,scale] duration-200 ${cardState}`}
           >
+            {leading}
             {/* Clicking the card body opens the editor. */}
             <button
               type="button"
+              id={fieldTriggerId(field.id)}
+              data-field-trigger
               onClick={openEditor}
               aria-label={`Edit ${title}`}
+              aria-keyshortcuts="Alt+ArrowUp Alt+ArrowDown Delete"
               className="group/card focus-visible:outline-plum flex min-w-0 flex-1 items-center gap-3 rounded-lg px-1 py-0.5 text-start focus-visible:outline-2 focus-visible:outline-offset-2"
             >
               <span className="bg-plum/10 text-plum group-hover/card:bg-plum grid size-9 shrink-0 place-items-center rounded-lg transition-[background-color,color,rotate] duration-200 group-hover/card:-rotate-6 group-hover/card:text-white">
@@ -123,6 +224,7 @@ export const FieldCard = memo(function FieldCard({
               label={title}
               onEdit={openEditor}
               onDelete={startDelete}
+              before={trailing}
             />
           </div>
         </div>

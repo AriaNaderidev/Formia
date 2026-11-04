@@ -124,6 +124,11 @@ export const cleanEditorValues = (values: EditorValues): EditorValues => {
     validation: cleanValidation(values.type, values.validation),
   };
 
+  // Only date and time fields have one; an empty one means "use the default".
+  const placeholder = next.placeholder?.trim();
+  if (isTemporalType(next.type) && placeholder) next.placeholder = placeholder;
+  else delete next.placeholder;
+
   if (OPTION_FIELD_TYPES.includes(next.type)) {
     const options = cleanOptions(next.options);
     next.options = options;

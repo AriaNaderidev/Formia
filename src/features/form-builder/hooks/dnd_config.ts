@@ -10,7 +10,7 @@ import {
   type Modifier,
   type Over,
 } from "@dnd-kit/core";
-import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import { sortableKeyboardCoordinates, type SortingStrategy } from "@dnd-kit/sortable";
 import { isPaletteId } from "@/features/form-schema";
 
 export const CANVAS_DROPPABLE_ID = "main-area";
@@ -44,6 +44,13 @@ export const getDropSide = (active: Active, over: Over): "above" | "below" => {
   const draggedCenter = dragged.top + dragged.height / 2;
   return draggedCenter < over.rect.top + over.rect.height / 2 ? "above" : "below";
 };
+
+/**
+ * Rows don't slide aside while one is dragged. Tabs and sections are boxes that hold rows,
+ * and a box can't grow or shrink in the middle of a drag, so sliding would overlap them.
+ * A line on the edge of the hovered row shows where the drop will land instead.
+ */
+export const noShiftStrategy: SortingStrategy = () => null;
 
 /** Keeps a reordered field on a vertical rail. Palette drags stay free. */
 export const restrictReorderToYAxis: Modifier = ({ active, transform }) =>

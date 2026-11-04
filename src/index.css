@@ -13,11 +13,22 @@
     U+21E7, U+2605;
 }
 
+/* Vazirmatn for Persian and Arabic script. The unicode-range keeps the file from loading
+   until a page actually shows such text. */
+@font-face {
+  font-family: "Vazirmatn";
+  src: url("./assets/fonts/Vazirmatn.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  unicode-range: U+0600-06FF, U+200C-200E, U+2010-2011, U+FB50-FDFF, U+FE70-FEFF;
+}
+
 /* ---------- design tokens ---------- */
 /* Each --color-* becomes Tailwind utilities: bg-plum, text-ink, border-line ...
    Keep in sync with src/theme/theme.ts */
 @theme {
-  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: "Inter", "Vazirmatn", system-ui, -apple-system, "Segoe UI", sans-serif;
 
   --color-plum: #522d60;
   --color-plum-dark: #3a1f45;

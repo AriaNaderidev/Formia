@@ -12,7 +12,7 @@ import {
   type PackageManager,
   type UiKit,
 } from "@/features/codegen";
-import type { FormField } from "@/features/form-schema";
+import type { FormDirection, FormField } from "@/features/form-schema";
 import { CopyButton } from "@/ui/CopyButton";
 import { SegmentedControl } from "@/ui/SegmentedControl";
 import { downloadText } from "@/utils/download";
@@ -85,7 +85,15 @@ const useFormattedCode = (raw: string, enabled: boolean) => {
   };
 };
 
-const CodeTab = ({ fields, active }: { fields: FormField[]; active: boolean }) => {
+const CodeTab = ({
+  fields,
+  direction,
+  active,
+}: {
+  fields: FormField[];
+  direction: FormDirection;
+  active: boolean;
+}) => {
   const [library, setLibrary] = useLocalStorageState<FormLibrary>(
     "form-builder:codegen-library",
     "rhf",
@@ -119,8 +127,9 @@ const CodeTab = ({ fields, active }: { fields: FormField[]; active: boolean }) =
         library: deferredLibrary,
         ui: deferredUi,
         componentName,
+        direction,
       }),
-    [fields, deferredLibrary, deferredUi, componentName],
+    [fields, deferredLibrary, deferredUi, componentName, direction],
   );
   const { code, isPending } = useFormattedCode(generated.code, active);
 
@@ -139,6 +148,7 @@ const CodeTab = ({ fields, active }: { fields: FormField[]; active: boolean }) =
             library: lib.value,
             ui: kit.value,
             componentName,
+            direction,
           });
           await formatCode(raw).catch(() => {});
         }
@@ -148,7 +158,7 @@ const CodeTab = ({ fields, active }: { fields: FormField[]; active: boolean }) =
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [active, isPending, fields, deferredLibrary, deferredUi, componentName]);
+  }, [active, isPending, fields, deferredLibrary, deferredUi, componentName, direction]);
   const install = installCommand(generated.dependencies, manager);
   const resolvedName = toComponentName(nameInput);
 

@@ -200,7 +200,9 @@ export const FIELD_CATALOG: FormField[] = [
     validation: REQUIRED,
   }),
 
-  /* Layout (containers + spacing) */
+  /* Layout (containers + spacing). A tab or section owns every field below it, up to the next one. */
+  field("tab", { ...LAYOUT_BASE, name: "Tab", label: "New tab" }),
+  field("section", { ...LAYOUT_BASE, name: "Section", label: "New section", content: "" }),
   field("divider", { ...LAYOUT_BASE, name: "Divider" }),
   field("spacer", { ...LAYOUT_BASE, name: "Spacer", height: 24 }),
 

@@ -66,7 +66,7 @@ export const theme = createTheme({
 
   typography: {
     // Must match the family name in @font-face (index.css).
-    fontFamily: '"Inter", system-ui, -apple-system, "Segoe UI", sans-serif',
+    fontFamily: '"Inter", "Vazirmatn", system-ui, -apple-system, "Segoe UI", sans-serif',
     h1: { fontWeight: 700, letterSpacing: "-0.02em" },
     h2: { fontWeight: 700, letterSpacing: "-0.02em" },
     h3: { fontWeight: 600, letterSpacing: "-0.01em" },

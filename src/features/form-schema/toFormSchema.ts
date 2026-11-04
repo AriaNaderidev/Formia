@@ -1,17 +1,28 @@
 import { z } from "zod";
 import { FIELD_CATALOG } from "./catalog";
-import { FIELD_NAME_PATTERN, type FormField, type FormSchema } from "./types";
+import {
+  FIELD_NAME_PATTERN,
+  type FormDirection,
+  type FormField,
+  type FormSchema,
+} from "./types";
 
-export const toFormSchema = (fields: FormField[]): FormSchema => ({
+export const toFormSchema = (
+  fields: FormField[],
+  direction: FormDirection = "ltr",
+): FormSchema => ({
   version: 1,
   fields,
+  ...(direction === "rtl" ? { direction } : {}),
 });
 
-const KNOWN_TYPES = new Set(FIELD_CATALOG.map((field) => field.type));
+// `end` is not in the catalog (it is never a palette item) but is valid in a saved form.
+const KNOWN_TYPES = new Set<string>([...FIELD_CATALOG.map((field) => field.type), "end"]);
 
 /** Just enough structure to trust an imported file; unknown extra keys are kept. */
 const importedSchema = z.object({
   version: z.literal(1),
+  direction: z.enum(["ltr", "rtl"]).optional(),
   fields: z.array(
     z.looseObject({
       id: z.string().min(1),

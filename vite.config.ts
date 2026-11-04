@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import tailwindcss from "@tailwindcss/vite";
+import { VitePWA } from "vite-plugin-pwa";
 import path from "node:path";
 
 /** Long-lived vendor chunks: they stay cached across app deploys. */
@@ -25,7 +26,45 @@ const chunkFor = (id: string) => {
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    VitePWA({
+      // "prompt": a new service worker waits until the user accepts, so a reload never wipes unsaved work.
+      registerType: "prompt",
+      includeAssets: ["favicon.svg", "apple-touch-icon.png"],
+      manifest: {
+        name: "Formia: Form Generator",
+        short_name: "Formia",
+        description:
+          "Drag fields onto a canvas, preview the form live, and export it as a JSON schema or React code.",
+        id: "/",
+        start_url: "/",
+        scope: "/",
+        display: "standalone",
+        background_color: "#fbf8fc",
+        theme_color: "#522d60",
+        icons: [
+          { src: "icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+          { src: "icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+          {
+            src: "icon-maskable-512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "maskable",
+          },
+        ],
+      },
+      workbox: {
+        // Precache the shell plus every lazy chunk (Prettier, syntax highlighting) so
+        // the Code tab works offline too. The app has no API, so nothing else is cached.
+        globPatterns: ["**/*.{js,css,html,svg,png,webp,woff2}"],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+        navigateFallback: "index.html",
+        cleanupOutdatedCaches: true,
+      },
+    }),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

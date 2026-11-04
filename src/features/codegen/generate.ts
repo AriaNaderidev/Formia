@@ -1,10 +1,13 @@
 import {
+  buildLayout,
   getDefaultValue,
-  groupIntoRows,
   isValueField,
+  rowWeights,
   toFieldSpec,
+  type FieldRow,
   type FieldSpec,
   type FormField,
+  type FormSection,
   type ValueKind,
 } from "@/features/form-schema";
 import { createBinding } from "./bindings";
@@ -13,12 +16,16 @@ import {
   renderMuiField,
   renderMuiLayout,
   renderMuiRow,
+  renderMuiSection,
+  renderMuiTabs,
 } from "./kits/mui";
 import {
   renderTailwindDefaultActions,
   renderTailwindField,
   renderTailwindLayout,
   renderTailwindRow,
+  renderTailwindSection,
+  renderTailwindTabs,
   TAILWIND_STYLES,
 } from "./kits/tailwind";
 import { propKey, toCamelCase, toComponentName } from "./naming";
@@ -29,6 +36,7 @@ import type {
   FormLibrary,
   GeneratedCode,
   PackageManager,
+  TabPanel,
   UiKit,
 } from "./types";
 
@@ -51,6 +59,9 @@ const LIBRARY_DEPS: Record<FormLibrary, string[]> = {
 
 /** Only added when the form has a date, time or date-time field. */
 const PICKER_DEPS = ["@mui/x-date-pickers", "dayjs"];
+
+/** Only added for a right-to-left Material UI form: mirrors MUI's physical left/right styles. */
+const RTL_DEPS = ["@emotion/cache", "stylis-plugin-rtl"];
 
 const UI_DEPS: Record<UiKit, string[]> = {
   tailwind: [],
@@ -107,34 +118,75 @@ const optionConstants = (specs: FieldSpec[]) => {
 
 /* ---------- body ---------- */
 
+/** One entry per tab. Present only when the form has tab markers. */
+type TabInfo = { title: string; fields: string[] };
+
 const renderBody = (fields: FormField[], specs: FieldSpec[], ctx: Ctx) => {
   const specById = new Map(specs.map((spec) => [spec.field.id, spec]));
   const isMui = ctx.options.ui === "mui";
 
-  const rows = groupIntoRows(fields)
-    .map((row) => {
-      const cells = row.fields
-        .map((field) => {
-          const spec = specById.get(field.id);
-          if (spec) {
-            return isMui ? renderMuiField(spec, ctx) : renderTailwindField(spec, ctx);
-          }
-          return isMui ? renderMuiLayout(field, ctx) : renderTailwindLayout(field, ctx);
-        })
-        .filter(Boolean);
-      if (cells.length === 0) return "";
-      return isMui ? renderMuiRow(cells, ctx) : renderTailwindRow(cells);
-    })
-    .filter(Boolean);
+  const renderRows = (rows: FieldRow[]) =>
+    rows
+      .map((row) => {
+        const cells = row.fields
+          .map((field) => {
+            const spec = specById.get(field.id);
+            if (spec) {
+              return isMui ? renderMuiField(spec, ctx) : renderTailwindField(spec, ctx);
+            }
+            return isMui ? renderMuiLayout(field, ctx) : renderTailwindLayout(field, ctx);
+          })
+          .filter(Boolean);
+        if (cells.length === 0) return "";
+        const weights = rowWeights(row.fields);
+        return isMui ? renderMuiRow(cells, weights, ctx) : renderTailwindRow(cells, weights);
+      })
+      .filter(Boolean);
+
+  const renderSection = (section: FormSection) => {
+    const rows = renderRows(section.rows);
+    if (!section.marker) return rows;
+    const block = isMui
+      ? renderMuiSection(section.marker, rows, ctx)
+      : renderTailwindSection(section.marker, rows);
+    return [block];
+  };
 
   const hasSubmit = fields.some(
     (field) => field.type === "button" && (field.buttonType ?? "submit") === "submit",
   );
-  if (!hasSubmit) {
-    rows.push(isMui ? renderMuiDefaultActions(ctx) : renderTailwindDefaultActions(ctx));
+  const actions = hasSubmit
+    ? []
+    : [isMui ? renderMuiDefaultActions(ctx) : renderTailwindDefaultActions(ctx)];
+
+  const { lead, tabs: layoutTabs, trail } = buildLayout(fields);
+  if (layoutTabs.length === 0) {
+    return { body: [...lead.flatMap(renderSection), ...actions].join("\n"), tabs: null };
   }
 
-  return rows.join("\n");
+  // The default Submit / Reset belong under the last tab.
+  const panels: TabPanel[] = layoutTabs.map((tab, index) => ({
+    body: [
+      ...tab.sections.flatMap(renderSection),
+      ...(index === layoutTabs.length - 1 ? actions : []),
+    ].join("\n"),
+    previousLabel: tab.previousLabel,
+    nextLabel: tab.nextLabel,
+  }));
+  const tabs: TabInfo[] = layoutTabs.map((tab) => ({
+    title: tab.title,
+    fields: tab.fields.flatMap((field) => {
+      const spec = specById.get(field.id);
+      return spec ? [spec.name] : [];
+    }),
+  }));
+  // Content outside the tabs: before them, and after them.
+  const body = [
+    ...lead.flatMap(renderSection),
+    isMui ? renderMuiTabs(panels, ctx) : renderTailwindTabs(panels),
+    ...trail.flatMap(renderSection),
+  ].join("\n");
+  return { body, tabs };
 };
 
 /* ---------- per library ---------- */
@@ -146,29 +198,99 @@ type Parts = {
   outputType: string;
   body: string;
   specs: FieldSpec[];
+  tabs: TabInfo[] | null;
   ctx: Ctx;
 };
 
-const formOpen = (ctx: Ctx, onSubmit: string) =>
-  ctx.options.ui === "mui"
-    ? `${ctx.pickers.size ? "<LocalizationProvider dateAdapter={AdapterDayjs}>" : ""}<Box component="form" noValidate onSubmit={${onSubmit}} sx={{ display: "flex", flexDirection: "column", gap: 2.5, maxWidth: 560, mx: "auto" }}>`
-    : `<form noValidate onSubmit={${onSubmit}} className="mx-auto flex w-full max-w-xl flex-col gap-5">`;
+const isRtl = (ctx: Ctx) => ctx.options.direction === "rtl";
+
+const formOpen = (ctx: Ctx, onSubmit: string) => {
+  const dir = isRtl(ctx) ? ` dir="rtl"` : "";
+  return ctx.options.ui === "mui"
+    ? `${isRtl(ctx) ? "<CacheProvider value={rtlCache}><ThemeProvider theme={rtlTheme}>" : ""}${ctx.pickers.size ? "<LocalizationProvider dateAdapter={AdapterDayjs}>" : ""}<Box component="form"${dir} noValidate onSubmit={${onSubmit}} sx={{ display: "flex", flexDirection: "column", gap: 2.5, maxWidth: 560, mx: "auto" }}>`
+    : `<form${dir} noValidate onSubmit={${onSubmit}} className="mx-auto flex w-full max-w-xl flex-col gap-5">`;
+};
 
 const formClose = (ctx: Ctx) =>
   ctx.options.ui === "mui"
-    ? `</Box>${ctx.pickers.size ? "</LocalizationProvider>" : ""}`
+    ? `</Box>${ctx.pickers.size ? "</LocalizationProvider>" : ""}${isRtl(ctx) ? "</ThemeProvider></CacheProvider>" : ""}`
     : "</form>";
+
+/* ---------- tabs ---------- */
+
+const tabsConstant = (tabs: TabInfo[], keyType: string) =>
+  `const TABS: { title: string; fields: (keyof ${keyType})[] }[] = [\n${tabs
+    .map(
+      (tab) =>
+        `  { title: ${JSON.stringify(tab.title)}, fields: [${tab.fields.map((field) => JSON.stringify(field)).join(", ")}] },`,
+    )
+    .join("\n")}\n];`;
+
+/** Validates one tab with the library's own API, so errors show where the user is looking. */
+const VALIDATE_TAB: Record<FormLibrary, string> = {
+  rhf: `const validateTab = async (index: number) => {
+    const { fields } = TABS[index];
+    return fields.length === 0 || (await trigger(fields, { shouldFocus: true }));
+  };`,
+  formik: `const validateTab = async (index: number) => {
+    const errors = await formik.validateForm();
+    const invalid = TABS[index].fields.filter((field) => errors[field]);
+    await formik.setTouched(
+      { ...formik.touched, ...Object.fromEntries(invalid.map((field) => [field, true])) },
+      false,
+    );
+    return invalid.length === 0;
+  };`,
+  tanstack: `const validateTab = async (index: number) => {
+    const results = await Promise.all(
+      TABS[index].fields.map((field) => form.validateField(field, "change")),
+    );
+    return results.every((errors) => errors.length === 0);
+  };`,
+};
+
+const SUBMIT_FORM: Record<FormLibrary, string> = {
+  rhf: "await handleSubmit(onSubmit)(event);",
+  formik: "formik.handleSubmit(event);",
+  tanstack: "await form.handleSubmit();",
+};
+
+/** Tab state, per-tab validation, and a submit that jumps to the first tab with an error. */
+const tabLogic = (library: FormLibrary) => `
+
+  const baseId = useId();
+  const [tab, setTab] = useState(0);
+
+  ${VALIDATE_TAB[library]}
+
+  const goNext = async () => {
+    if (await validateTab(tab)) setTab(tab + 1);
+  };
+
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    for (let index = 0; index < TABS.length; index++) {
+      if (!(await validateTab(index))) {
+        setTab(index);
+        return;
+      }
+    }
+    ${SUBMIT_FORM[library]}
+  };`;
+
+const TAB_SUBMIT = "(event) => void submit(event)";
 
 const defaultsObject = (specs: FieldSpec[]) =>
   `{\n${specs.map((spec) => `  ${propKey(spec.name)}: ${literal(spec)},`).join("\n")}\n}`;
 
-const rhfComponent = ({ name, schemaName, inputType, outputType, body, specs, ctx }: Parts) => {
+const rhfComponent = ({ name, schemaName, inputType, outputType, body, specs, tabs, ctx }: Parts) => {
   const { uses } = ctx;
   const members = [
     uses.has("register") && "register",
     uses.has("control") && "control",
     "handleSubmit",
     uses.has("reset") && "reset",
+    tabs && "trigger",
   ].filter(Boolean);
   const state = [uses.has("errors") && "errors", uses.has("isSubmitting") && "isSubmitting"].filter(
     Boolean,
@@ -186,17 +308,17 @@ export function ${name}({ onSubmit }: ${name}Props) {
     resolver: zodResolver(${schemaName}),
     defaultValues,
     mode: "onTouched",
-  });
+  });${tabs ? tabLogic("rhf") : ""}
 
   return (
-    ${formOpen(ctx, "handleSubmit(onSubmit)")}
+    ${formOpen(ctx, tabs ? TAB_SUBMIT : "handleSubmit(onSubmit)")}
       ${body}
     ${formClose(ctx)}
   );
 }`;
 };
 
-const formikComponent = ({ name, schemaName, outputType, body, specs, ctx }: Parts) => {
+const formikComponent = ({ name, schemaName, outputType, body, specs, tabs, ctx }: Parts) => {
   const valuesType = `${name}Values`;
   const typeLines = specs
     .map((spec) => `  ${propKey(spec.name)}: ${RAW_TYPES[spec.kind]};`)
@@ -225,17 +347,17 @@ export function ${name}({ onSubmit }: ${name}Props) {
     onSubmit: async (values) => {
       await onSubmit(${schemaName}.cast(values));
     },
-  });${errorOf}
+  });${errorOf}${tabs ? tabLogic("formik") : ""}
 
   return (
-    ${formOpen(ctx, "formik.handleSubmit")}
+    ${formOpen(ctx, tabs ? TAB_SUBMIT : "formik.handleSubmit")}
       ${body}
     ${formClose(ctx)}
   );
 }`;
 };
 
-const tanstackComponent = ({ name, schemaName, inputType, outputType, body, specs, ctx }: Parts) =>
+const tanstackComponent = ({ name, schemaName, inputType, outputType, body, specs, tabs, ctx }: Parts) =>
   `const defaultValues: ${inputType} = ${defaultsObject(specs)};
 
 type ${name}Props = {
@@ -249,14 +371,19 @@ export function ${name}({ onSubmit }: ${name}Props) {
     onSubmit: async ({ value }) => {
       await onSubmit(${schemaName}.parse(value));
     },
-  });
+  });${tabs ? tabLogic("tanstack") : ""}
 
   return (
-    ${formOpen(ctx, `(event) => {
+    ${formOpen(
+      ctx,
+      tabs
+        ? TAB_SUBMIT
+        : `(event) => {
         event.preventDefault();
         event.stopPropagation();
         void form.handleSubmit();
-      }`)}
+      }`,
+    )}
       ${body}
     ${formClose(ctx)}
   );
@@ -294,13 +421,16 @@ export const generateFormCode = (
   };
 
   // Rendering first: it records which imports and hook members are needed.
-  const body = renderBody(fields, specs, ctx);
+  const { body, tabs } = renderBody(fields, specs, ctx);
   if (options.ui === "mui") ctx.uiImports.add("Box");
+  const rtlMui = options.ui === "mui" && isRtl(ctx);
+  if (rtlMui) ctx.uiImports.add("ThemeProvider").add("createTheme");
 
   const isYup = options.library === "formik";
   const schema = isYup ? printYupObject(specs) : printZodObject(specs);
 
   const imports: string[] = [];
+  if (tabs) imports.push(`import { useId, useState, type FormEvent } from "react";`);
   switch (options.library) {
     case "rhf":
       imports.push(
@@ -329,6 +459,16 @@ export const generateFormCode = (
       `import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";`,
     );
   }
+  if (uses.has("backIcon")) {
+    imports.push(`import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";`);
+  }
+  if (rtlMui) {
+    imports.push(
+      `import createCache from "@emotion/cache";`,
+      `import { CacheProvider } from "@emotion/react";`,
+      `import rtlPlugin from "stylis-plugin-rtl";`,
+    );
+  }
   if (ctx.uiImports.size) {
     imports.push(`import { ${[...ctx.uiImports].sort().join(", ")} } from "@mui/material";`);
   }
@@ -337,7 +477,7 @@ export const generateFormCode = (
     ? `export type ${outputType} = yup.InferType<typeof ${schemaName}>;`
     : `export type ${inputType} = z.input<typeof ${schemaName}>;\nexport type ${outputType} = z.output<typeof ${schemaName}>;`;
 
-  const parts: Parts = { name, schemaName, inputType, outputType, body, specs, ctx };
+  const parts: Parts = { name, schemaName, inputType, outputType, body, specs, tabs, ctx };
   const component =
     options.library === "formik"
       ? formikComponent(parts)
@@ -349,6 +489,8 @@ export const generateFormCode = (
     ...LIBRARY_DEPS[options.library],
     ...UI_DEPS[options.ui],
     ...(ctx.pickers.size ? PICKER_DEPS : []),
+    ...(rtlMui ? RTL_DEPS : []),
+    ...(uses.has("backIcon") ? ["@mui/icons-material"] : []),
   ];
 
   const sections = [
@@ -368,6 +510,14 @@ export const generateFormCode = (
     ...consts.source,
     `export const ${schemaName} = ${schema.source};`,
     typeExports,
+    ...(rtlMui
+      ? [
+          `// Mirrors MUI's left/right styles for right-to-left text.
+const rtlCache = createCache({ key: "muirtl", stylisPlugins: [rtlPlugin] });
+const rtlTheme = createTheme({ direction: "rtl" });`,
+        ]
+      : []),
+    ...(tabs ? [tabsConstant(tabs, isYup ? `${name}Values` : inputType)] : []),
     component,
   ];
 
