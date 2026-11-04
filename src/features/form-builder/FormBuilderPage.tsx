@@ -41,8 +41,19 @@ const PANES = [
 ];
 
 export const FormBuilderPage = () => {
-  const { fields, setFields, getFields, undo, redo, canUndo, canRedo, savedAt } =
-    useFieldsHistory();
+  const {
+    fields,
+    setFields,
+    getFields,
+    direction,
+    setDirection,
+    getDirection,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    savedAt,
+  } = useFieldsHistory();
   const { activeId, handleDragStart, handleDragEnd, handleDragCancel } =
     useFormBuilderDnd(setFields);
   const sensors = useFormBuilderSensors();
@@ -89,8 +100,8 @@ export const FormBuilderPage = () => {
 
   // A new object every render would re-render every context consumer.
   const contextValue = useMemo(
-    () => ({ fields, setFields, getFields }),
-    [fields, setFields, getFields],
+    () => ({ fields, setFields, getFields, direction, setDirection, getDirection }),
+    [fields, setFields, getFields, direction, setDirection, getDirection],
   );
 
   return (

@@ -1,5 +1,11 @@
 import Typography from "@mui/material/Typography";
-import type { FieldType } from "@/features/form-schema";
+import { useFormContext } from "react-hook-form";
+import {
+  BUTTON_VARIANT_BY_TYPE,
+  type ButtonType,
+  type FieldType,
+} from "@/features/form-schema";
+import type { EditorValues } from "./editor_model";
 import { SelectControl, type SelectOption } from "./SelectControl";
 import { TextControl } from "./TextControl";
 import { NumberControl } from "./NumberControl";
@@ -30,9 +36,74 @@ const BUTTON_VARIANTS: SelectOption[] = [
   { value: "text", label: "Text only" },
 ];
 
+const ButtonSettings = () => {
+  const { setValue } = useFormContext<EditorValues>();
+
+  return (
+    <>
+      <TextControl name="label" label="Button text" />
+      <SelectControl
+        name="buttonType"
+        label="Action"
+        options={BUTTON_TYPES}
+        // Each action starts with its own look; the style can still be changed after.
+        onValueChange={(type) =>
+          setValue("buttonVariant", BUTTON_VARIANT_BY_TYPE[type as ButtonType], {
+            shouldDirty: true,
+          })
+        }
+      />
+      <SelectControl
+        name="buttonVariant"
+        label="Style"
+        options={BUTTON_VARIANTS}
+      />
+    </>
+  );
+};
+
 /** Settings for layout and content elements, one block per type. */
 export const ContentSettings = ({ type }: { type: FieldType }) => {
   switch (type) {
+    case "tab":
+      return (
+        <>
+          <TextControl name="label" label="Tab title" />
+          <TextControl
+            name="previousLabel"
+            label="Previous button text"
+            placeholder="Previous"
+            helperText="Shown on every tab except the first"
+          />
+          <TextControl
+            name="nextLabel"
+            label="Next button text"
+            placeholder="Next"
+            helperText="Shown on every tab except the last"
+          />
+          <Typography variant="body2" color="text.secondary">
+            The fields inside this tab's area on the canvas appear on it.
+          </Typography>
+        </>
+      );
+
+    case "section":
+      return (
+        <>
+          <TextControl name="label" label="Section title" />
+          <TextControl
+            name="content"
+            label="Description"
+            helperText="Optional, shown under the title"
+            multiline
+            rows={2}
+          />
+          <Typography variant="body2" color="text.secondary">
+            The fields inside this section's area on the canvas are grouped under it.
+          </Typography>
+        </>
+      );
+
     case "heading":
       return (
         <>
@@ -76,21 +147,7 @@ export const ContentSettings = ({ type }: { type: FieldType }) => {
       );
 
     case "button":
-      return (
-        <>
-          <TextControl name="label" label="Button text" />
-          <SelectControl
-            name="buttonType"
-            label="Action"
-            options={BUTTON_TYPES}
-          />
-          <SelectControl
-            name="buttonVariant"
-            label="Style"
-            options={BUTTON_VARIANTS}
-          />
-        </>
-      );
+      return <ButtonSettings />;
 
     case "spacer":
       return (

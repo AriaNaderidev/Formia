@@ -1,4 +1,4 @@
-import type { FieldSpec } from "@/features/form-schema";
+import type { FieldSpec, FormDirection } from "@/features/form-schema";
 
 export type FormLibrary = "rhf" | "formik" | "tanstack";
 export type UiKit = "tailwind" | "mui";
@@ -8,7 +8,12 @@ export type CodegenOptions = {
   library: FormLibrary;
   ui: UiKit;
   componentName: string;
+  /** Defaults to `ltr`. */
+  direction?: FormDirection;
 };
+
+/** One tab's markup and the text of its navigation buttons. */
+export type TabPanel = { body: string; previousLabel: string; nextLabel: string };
 
 export type GeneratedCode = {
   filename: string;

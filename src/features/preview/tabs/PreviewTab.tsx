@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import DesktopWindowsOutlinedIcon from "@mui/icons-material/DesktopWindowsOutlined";
 import PhoneIphoneOutlinedIcon from "@mui/icons-material/PhoneIphoneOutlined";
-import type { FormField } from "@/features/form-schema";
+import type { FormDirection, FormField } from "@/features/form-schema";
 import { FormRenderer, type SubmittedForm } from "@/features/form-renderer";
 import { SegmentedControl } from "@/ui/SegmentedControl";
 import { toast } from "@/ui/toast";
@@ -19,7 +19,13 @@ const showInvalid = (count: number) => {
   });
 };
 
-export const PreviewTab = ({ fields }: { fields: FormField[] }) => {
+export const PreviewTab = ({
+  fields,
+  direction,
+}: {
+  fields: FormField[];
+  direction: FormDirection;
+}) => {
   const [device, setDevice] = useLocalStorageState<Device>(
     "form-builder:preview-device",
     "desktop",
@@ -70,7 +76,12 @@ export const PreviewTab = ({ fields }: { fields: FormField[] }) => {
             : "max-w-full rounded-none border-0 border-transparent px-0 py-0"
         }`}
       >
-        <FormRenderer fields={fields} onSubmit={onSubmit} onInvalid={showInvalid} />
+        <FormRenderer
+          fields={fields}
+          direction={direction}
+          onSubmit={onSubmit}
+          onInvalid={showInvalid}
+        />
       </div>
 
       <SubmissionDialog

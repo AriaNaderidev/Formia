@@ -8,10 +8,11 @@ import OutlinedInput from "@mui/material/OutlinedInput";
 import Popover from "@mui/material/Popover";
 import Typography from "@mui/material/Typography";
 import {
-  createFieldFromType,
+  createFieldsFromType,
   insertField,
   isFullWidth,
   type FieldType,
+  type InsertPlacement,
 } from "../../../form-schema";
 import { useFormBuilderActions } from "../../context/useFormBuilderContext";
 import { usePaletteGroups } from "../../hooks/usePaletteGroup";
@@ -22,6 +23,8 @@ type AddFieldMenuProps = {
   /** The "+" button. The menu opens next to it. */
   anchorEl: HTMLElement | null;
   onClose: () => void;
+  /** "beside" joins the anchor's row, so full-width items are left out. "below" adds a new row. */
+  placement?: InsertPlacement;
 };
 
 /**
@@ -29,33 +32,40 @@ type AddFieldMenuProps = {
  * so the canvas's scroll container can't clip it or push the layout around, and it keeps
  * itself inside the viewport (flipping above the button when there is no room below).
  */
-export const AddFieldMenu = ({ anchorId, anchorEl, onClose }: AddFieldMenuProps) => {
+export const AddFieldMenu = ({
+  anchorId,
+  anchorEl,
+  onClose,
+  placement = "beside",
+}: AddFieldMenuProps) => {
   const { setFields } = useFormBuilderActions();
   const [query, setQuery] = useState("");
   const { groups: allGroups } = usePaletteGroups(query);
   // Full-width elements (headings, dividers, alerts) can't sit beside another field.
   const groups = useMemo(
     () =>
-      allGroups
-        .map((group) => ({
-          ...group,
-          items: group.items.filter((item) => !isFullWidth(item.type)),
-        }))
-        .filter((group) => group.items.length > 0),
-    [allGroups],
+      placement === "below"
+        ? allGroups
+        : allGroups
+            .map((group) => ({
+              ...group,
+              items: group.items.filter((item) => !isFullWidth(item.type)),
+            }))
+            .filter((group) => group.items.length > 0),
+    [allGroups, placement],
   );
 
   const handleAdd = useCallback(
     (type: FieldType) => {
       setFields((prev) =>
-        insertField(prev, createFieldFromType(type, prev), {
+        insertField(prev, createFieldsFromType(type, prev), {
           anchorId,
-          placement: "beside",
+          placement,
         }),
       );
       onClose();
     },
-    [anchorId, onClose, setFields],
+    [anchorId, onClose, placement, setFields],
   );
 
   return (

@@ -94,14 +94,14 @@ export const AppHeader = ({
     closeMenu();
     action();
   };
-  const { fields, setFields, getFields } = useFormBuilderContext();
+  const { fields, setFields, getFields, setDirection, getDirection } = useFormBuilderContext();
   const fileInput = useRef<HTMLInputElement>(null);
   const isEmpty = fields.length === 0;
 
   const exportSchema = () => {
     downloadText(
       "form.schema.json",
-      JSON.stringify(toFormSchema(getFields()), null, 2),
+      JSON.stringify(toFormSchema(getFields(), getDirection()), null, 2),
       "application/json",
     );
     toast.success("Schema exported", {
@@ -119,6 +119,7 @@ export const AppHeader = ({
         return;
       }
       setFields(result.schema.fields);
+      setDirection(result.schema.direction ?? "ltr");
       toast.success(`Imported ${result.schema.fields.length} fields`, {
         description: file.name,
         action: { label: "Undo", onClick: undo },

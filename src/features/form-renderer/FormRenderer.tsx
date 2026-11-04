@@ -4,19 +4,24 @@ import {
   useLayoutEffect,
   useMemo,
   useRef,
+  useState,
 } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, type Resolver } from "react-hook-form";
 import Button from "@mui/material/Button";
 import {
+  BUTTON_VARIANT_BY_TYPE,
   buildZodSchema,
   getDefaultValues,
-  groupIntoRows,
+  buildLayout,
   toFieldSpecs,
   type FieldSpec,
+  type FormDirection,
   type FormField,
 } from "../form-schema";
+import { DirectionScope } from "./DirectionScope";
 import { FieldControl, type FormValues } from "./FieldControl";
+import { FormLayout } from "./FormLayout";
 import { LayoutElement } from "./LayoutElement";
 
 export type SubmittedForm = {
@@ -26,6 +31,7 @@ export type SubmittedForm = {
 
 type FormRendererProps = {
   fields: FormField[];
+  direction?: FormDirection;
   onSubmit?: (result: SubmittedForm) => void;
   /** Called with the number of invalid fields when a submit is blocked. */
   onInvalid?: (count: number) => void;
@@ -63,6 +69,7 @@ type LiveFormProps = FormRendererProps & {
 
 const LiveForm = ({
   fields,
+  direction = "ltr",
   specs,
   defaults,
   onSubmit,
@@ -90,6 +97,7 @@ const LiveForm = ({
     handleSubmit,
     reset,
     trigger,
+    setFocus,
     formState: { isSubmitting, isSubmitted },
   } = useForm<FormValues>({
     defaultValues: defaults,
@@ -105,6 +113,34 @@ const LiveForm = ({
   const formRef = useRef<HTMLFormElement>(null);
   const onReset = useCallback(() => reset(defaults), [reset, defaults]);
 
+  const specById = useMemo(
+    () => new Map(specs.map((spec) => [spec.field.id, spec])),
+    [specs],
+  );
+  const layout = useMemo(() => buildLayout(fields), [fields]);
+  const tabs = layout.tabs;
+  const tabbed = tabs.length > 0;
+  const [requestedTab, setActiveTab] = useState(0);
+  // Deleting tabs in the builder can leave the saved index past the end.
+  const activeTab = Math.max(0, Math.min(requestedTab, tabs.length - 1));
+
+  const namesOf = useCallback(
+    (index: number) =>
+      (tabs[index]?.fields ?? []).flatMap((field) => {
+        const spec = specById.get(field.id);
+        return spec ? [spec.name] : [];
+      }),
+    [tabs, specById],
+  );
+
+  /** "Next": only moves on when the current tab is valid. */
+  const goNext = async () => {
+    const names = namesOf(activeTab);
+    if (names.length === 0 || (await trigger(names, { shouldFocus: true }))) {
+      setActiveTab(activeTab + 1);
+    }
+  };
+
   const submit = handleSubmit(
     async (data) => {
       await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
@@ -119,21 +155,26 @@ const LiveForm = ({
         form.classList.add("animate-shake");
       }
       onInvalid?.(Object.keys(errors).length);
+
+      // The first error may be on a tab that is hidden: show that tab, then focus the field.
+      const firstTab = tabs.findIndex((_, index) => namesOf(index).some((name) => name in errors));
+      const firstName = namesOf(firstTab).find((name) => name in errors);
+      if (tabbed && firstTab !== -1 && firstName) {
+        setActiveTab(firstTab);
+        requestAnimationFrame(() => setFocus(firstName));
+      }
     },
   );
 
-  const rows = useMemo(() => groupIntoRows(fields), [fields]);
-  const specById = useMemo(
-    () => new Map(specs.map((spec) => [spec.field.id, spec])),
-    [specs],
-  );
   const hasSubmitButton = fields.some(
     (field) => field.type === "button" && (field.buttonType ?? "submit") === "submit",
   );
 
   return (
+    <DirectionScope direction={direction}>
     <form
       ref={formRef}
+      dir={direction}
       noValidate
       onSubmit={submit}
       onReset={(event) => {
@@ -142,48 +183,38 @@ const LiveForm = ({
       }}
       className="@container flex flex-col gap-4"
     >
-      {rows.map((row, index) => (
-        <div
-          key={row.key}
-          style={{ animationDelay: `${Math.min(index, 10) * 30}ms` }}
-          className={`animate-fade-up grid gap-4 ${
-            row.fields.length > 1 ? "@sm:grid-cols-2" : ""
-          }`}
-        >
-          {row.fields.map((field) => {
-            const spec = specById.get(field.id);
-            return (
-              <div key={field.id} className="min-w-0">
-                {spec ? (
-                  <FieldControl spec={spec} control={control} />
-                ) : (
-                  <LayoutElement
-                    field={field}
-                    isSubmitting={isSubmitting}
-                    onReset={onReset}
-                  />
-                )}
-              </div>
-            );
-          })}
-        </div>
-      ))}
-
-      {hasSubmitButton ? null : (
-        <div className="flex gap-2 pt-1">
-          <Button
-            type="submit"
-            variant="contained"
-            loading={isSubmitting}
-            sx={{ flex: 1 }}
-          >
-            Submit
-          </Button>
-          <Button type="reset" variant="text" color="inherit">
-            Reset
-          </Button>
-        </div>
-      )}
+      <FormLayout
+        layout={layout}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        onNext={goNext}
+        renderField={(field) => {
+          const spec = specById.get(field.id);
+          return spec ? (
+            <FieldControl spec={spec} control={control} />
+          ) : (
+            <LayoutElement field={field} isSubmitting={isSubmitting} onReset={onReset} />
+          );
+        }}
+        footer={
+          hasSubmitButton ? null : (
+            <div className="grid grid-cols-[2fr_1fr] gap-2 pt-1">
+              <Button
+                fullWidth
+                type="submit"
+                variant={BUTTON_VARIANT_BY_TYPE.submit}
+                loading={isSubmitting}
+              >
+                Submit
+              </Button>
+              <Button fullWidth type="reset" variant={BUTTON_VARIANT_BY_TYPE.reset}>
+                Reset
+              </Button>
+            </div>
+          )
+        }
+      />
     </form>
+    </DirectionScope>
   );
 };

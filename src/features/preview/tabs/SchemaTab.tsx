@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import Tooltip from "@mui/material/Tooltip";
-import { toFormSchema, type FormField } from "@/features/form-schema";
+import { toFormSchema, type FormDirection, type FormField } from "@/features/form-schema";
 import { downloadText } from "@/utils/download";
 import { CodePanel } from "./CodePanel";
 
@@ -25,8 +25,17 @@ export const DownloadButton = ({
 );
 
 /** The builder's own JSON: import it later, or render it with your own engine. */
-const SchemaTab = ({ fields }: { fields: FormField[] }) => {
-  const json = useMemo(() => JSON.stringify(toFormSchema(fields), null, 2), [fields]);
+const SchemaTab = ({
+  fields,
+  direction,
+}: {
+  fields: FormField[];
+  direction: FormDirection;
+}) => {
+  const json = useMemo(
+    () => JSON.stringify(toFormSchema(fields, direction), null, 2),
+    [fields, direction],
+  );
 
   return (
     <div className="flex flex-col gap-3">

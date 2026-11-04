@@ -22,11 +22,13 @@ import RadioButtonCheckedIcon from "@mui/icons-material/RadioButtonChecked";
 import SmartButtonIcon from "@mui/icons-material/SmartButton";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
 import SubjectIcon from "@mui/icons-material/Subject";
+import TabOutlinedIcon from "@mui/icons-material/TabOutlined";
 import TextFieldsIcon from "@mui/icons-material/TextFields";
 import TitleIcon from "@mui/icons-material/Title";
 import ToggleOnOutlinedIcon from "@mui/icons-material/ToggleOnOutlined";
 import TuneIcon from "@mui/icons-material/Tune";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
+import ViewAgendaOutlinedIcon from "@mui/icons-material/ViewAgendaOutlined";
 import type { FieldType, FormField } from "@/features/form-schema";
 
 /* ---------- categories (display order) ---------- */
@@ -183,6 +185,24 @@ export const PALETTE_META: Record<FieldType, PaletteMeta> = {
     icon: UploadFileIcon,
   },
 
+  tab: {
+    title: "Tab",
+    description: "A step of the form: an area that holds sections and fields",
+    category: "layout",
+    icon: TabOutlinedIcon,
+  },
+  section: {
+    title: "Section",
+    description: "A titled area that groups the fields you put in it",
+    category: "layout",
+    icon: ViewAgendaOutlinedIcon,
+  },
+  end: {
+    title: "End of group",
+    description: "Closes a tab or section",
+    category: "layout",
+    icon: HorizontalRuleIcon,
+  },
   divider: {
     title: "Divider",
     description: "A line between groups of fields",

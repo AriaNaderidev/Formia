@@ -1,7 +1,7 @@
 import { memo, type KeyboardEvent } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import Tooltip from "@mui/material/Tooltip";
-import { createFieldFromType } from "@/features/form-schema";
+import { createFieldsFromType } from "@/features/form-schema";
 import { announce } from "@/ui/announce";
 import { useFormBuilderActions } from "../../context/useFormBuilderContext";
 import type { PaletteEntry } from "./palette_config";
@@ -35,9 +35,9 @@ export const PaletteItem = memo(({ entry, onAdd }: PaletteItemProps) => {
 
   // A click (no drag: the pointer sensor needs 4px of movement) appends the field.
   const add = () => {
-    const field = createFieldFromType(entry.type, getFields());
-    setFields((prev) => [...prev, field]);
-    revealCard(field.id);
+    const created = createFieldsFromType(entry.type, getFields());
+    setFields((prev) => [...prev, ...created]);
+    revealCard(created[0].id);
     announce(`${entry.title} added at the end of the form.`);
     onAdd?.();
   };

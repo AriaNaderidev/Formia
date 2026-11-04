@@ -2,6 +2,11 @@ import type { ReactNode } from "react";
 import { useDndContext, useDroppable } from "@dnd-kit/core";
 import { isPaletteId } from "@/features/form-schema";
 import { CANVAS_DROPPABLE_ID } from "@/features/form-builder/hooks/dnd_config";
+import { SegmentedControl } from "@/ui/SegmentedControl";
+import {
+  useFormBuilderActions,
+  useFormDirection,
+} from "../../context/useFormBuilderContext";
 import { getKeyLabel } from "../../shortcuts/shortcutList";
 
 type CanvasFrameProps = {
@@ -16,6 +21,8 @@ type CanvasFrameProps = {
  */
 export const CanvasFrame = ({ count, children }: CanvasFrameProps) => {
   const { setNodeRef } = useDroppable({ id: CANVAS_DROPPABLE_ID });
+  const direction = useFormDirection();
+  const { setDirection } = useFormBuilderActions();
   const { active, over } = useDndContext();
 
   // A new field is being dragged in from the palette (not a reorder).
@@ -30,7 +37,7 @@ export const CanvasFrame = ({ count, children }: CanvasFrameProps) => {
       className="flex min-h-full flex-col p-2 sm:p-4"
     >
       <div
-        className={`flex flex-1 flex-col rounded-2xl border bg-white px-2 py-4 shadow-sm sm:px-10 sm:py-5 transition-[border-color,box-shadow] duration-300 ${
+        className={`flex flex-1 flex-col rounded-2xl border bg-white px-2 py-3 shadow-sm sm:px-5 sm:py-5 transition-[border-color,box-shadow] duration-300 ${
           isOverCanvas
             ? "border-plum ring-plum/10 shadow-lg ring-4"
             : isAddingField
@@ -38,12 +45,25 @@ export const CanvasFrame = ({ count, children }: CanvasFrameProps) => {
               : "border-line"
         }`}
       >
-        <header className="mb-4 flex items-baseline justify-between gap-4">
-          <h2 className="text-ink text-base font-semibold">Form</h2>
-          <p className="text-ink-muted text-xs">
-            {count} {count === 1 ? "field" : "fields"}
-            {count > 1 && ` · drag or press ${getKeyLabel("Alt").text} + ↑ ↓ to reorder`}
-          </p>
+        <header className="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <div className="flex min-w-0 items-baseline gap-4">
+            <h2 className="text-ink text-base font-semibold">Form</h2>
+            <p className="text-ink-muted truncate text-xs">
+              {count} {count === 1 ? "field" : "fields"}
+              {count > 1 && ` · drag or press ${getKeyLabel("Alt").text} + ↑ ↓ to reorder`}
+            </p>
+          </div>
+          <SegmentedControl
+            ariaLabel="Form direction"
+            size="sm"
+            value={direction}
+            onChange={setDirection}
+            className="w-28 shrink-0"
+            segments={[
+              { value: "ltr", label: "LTR", ariaLabel: "Left to right" },
+              { value: "rtl", label: "RTL", ariaLabel: "Right to left" },
+            ]}
+          />
         </header>
 
         {children}

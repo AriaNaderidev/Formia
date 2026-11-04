@@ -6,10 +6,20 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
-import { normalizeRows, parseFormSchema, type FormField } from "@/features/form-schema";
+import {
+  normalizeContainers,
+  normalizeRows,
+  parseFormSchema,
+  toFormSchema,
+  type FormDirection,
+  type FormField,
+} from "@/features/form-schema";
 
 const STORAGE_KEY = "form-builder:schema";
 const HISTORY_LIMIT = 100;
+
+/** Tabs and sections closed properly first, then rows in canonical pairs. */
+const normalize = (fields: FormField[]) => normalizeRows(normalizeContainers(fields));
 const SAVE_DELAY_MS = 400;
 
 type History = {
@@ -19,14 +29,19 @@ type History = {
 };
 
 /** The last autosaved form, if it is still valid. */
-const loadSaved = (): FormField[] => {
+const loadSaved = (): { fields: FormField[]; direction: FormDirection } => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
+    if (!raw) return { fields: [], direction: "ltr" };
     const result = parseFormSchema(JSON.parse(raw));
-    return result.ok ? normalizeRows(result.schema.fields) : [];
+    return result.ok
+      ? {
+          fields: normalize(result.schema.fields),
+          direction: result.schema.direction ?? "ltr",
+        }
+      : { fields: [], direction: "ltr" };
   } catch {
-    return [];
+    return { fields: [], direction: "ltr" };
   }
 };
 
@@ -36,16 +51,25 @@ const loadSaved = (): FormField[] => {
  * so every one of them is undoable and normalized into canonical rows.
  */
 export const useFieldsHistory = () => {
+  const [saved] = useState(loadSaved);
   const [history, setHistory] = useState<History>(() => ({
     past: [],
-    present: loadSaved(),
+    present: saved.fields,
     future: [],
   }));
   const fields = history.present;
 
+  // Direction is a form setting, not an edit: it is saved with the fields but not undoable.
+  const [direction, setDirection] = useState<FormDirection>(saved.direction);
+  const directionRef = useRef(direction);
+  useEffect(() => {
+    directionRef.current = direction;
+  }, [direction]);
+  const getDirection = useCallback(() => directionRef.current, []);
+
   const setFields = useCallback<Dispatch<SetStateAction<FormField[]>>>((action) => {
     setHistory((prev) => {
-      const next = normalizeRows(typeof action === "function" ? action(prev.present) : action);
+      const next = normalize(typeof action === "function" ? action(prev.present) : action);
       if (next === prev.present) return prev;
       return {
         past: [...prev.past, prev.present].slice(-HISTORY_LIMIT),
@@ -89,20 +113,23 @@ export const useFieldsHistory = () => {
   useEffect(() => {
     const timer = window.setTimeout(() => {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, fields }));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(toFormSchema(fields, direction)));
         setSavedAt(Date.now());
       } catch {
         /* storage full or blocked: the session still works, it just won't persist */
       }
     }, SAVE_DELAY_MS);
     return () => window.clearTimeout(timer);
-  }, [fields]);
+  }, [fields, direction]);
 
   // A refresh, update or tab close inside the debounce window would drop the last edit.
   useEffect(() => {
     const flush = () => {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, fields: fieldsRef.current }));
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify(toFormSchema(fieldsRef.current, directionRef.current)),
+        );
       } catch {
         /* storage full or blocked */
       }
@@ -122,6 +149,9 @@ export const useFieldsHistory = () => {
     fields,
     setFields,
     getFields,
+    direction,
+    setDirection,
+    getDirection,
     undo,
     redo,
     canUndo: history.past.length > 0,

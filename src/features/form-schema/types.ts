@@ -22,6 +22,10 @@ export type InputFieldType =
   | "file";
 
 export type LayoutFieldType =
+  | "tab"
+  | "section"
+  /** Closes the nearest open tab or section. Never shown in the palette. */
+  | "end"
   | "divider"
   | "spacer"
   | "heading"
@@ -68,6 +72,13 @@ export type AlertSeverity = "info" | "success" | "warning" | "error";
 export type ButtonType = "submit" | "reset" | "button";
 export type ButtonVariant = "contained" | "outlined" | "text";
 
+/** Each action looks different by default: filled to submit, outlined to reset, text for the rest. */
+export const BUTTON_VARIANT_BY_TYPE: Record<ButtonType, ButtonVariant> = {
+  submit: "contained",
+  reset: "outlined",
+  button: "text",
+};
+
 export type FormField = {
   id: string;
   name: string;
@@ -92,7 +103,7 @@ export type FormField = {
   /** spacer, image */
   height?: number;
 
-  /** heading, paragraph, alert */
+  /** heading, paragraph, alert; the description of a section. */
   content?: string;
   headingLevel?: HeadingLevel;
   severity?: AlertSeverity;
@@ -100,6 +111,10 @@ export type FormField = {
   /** image */
   src?: string;
   alt?: string;
+
+  /** tab: text of its Next and Previous buttons. Defaults to "Next" / "Previous". */
+  nextLabel?: string;
+  previousLabel?: string;
 
   /** button */
   buttonType?: ButtonType;
@@ -112,9 +127,14 @@ export type FormField = {
  */
 export const FIELD_NAME_PATTERN = /^[A-Za-z_$][\w$-]*$/;
 
+/** Reading direction of the form. `rtl` is for Persian, Arabic and Hebrew forms. */
+export type FormDirection = "ltr" | "rtl";
+
 export type FormSchema = {
   version: 1;
   fields: FormField[];
+  /** Left out when `ltr`. */
+  direction?: FormDirection;
 };
 
 /** Rendered as a native <input type="..."> */

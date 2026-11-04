@@ -1,5 +1,9 @@
 import { useContext } from "react";
-import { FormActionsContext, FormFieldsContext } from "./formBuilderContext";
+import {
+  FormActionsContext,
+  FormDirectionContext,
+  FormFieldsContext,
+} from "./formBuilderContext";
 
 const MISSING = "must be used within a FormBuilderProvider";
 
@@ -8,6 +12,13 @@ export const useFormBuilderActions = () => {
   const actions = useContext(FormActionsContext);
   if (!actions) throw new Error(`useFormBuilderActions ${MISSING}`);
   return actions;
+};
+
+/** The form's reading direction. Does not re-render on field changes. */
+export const useFormDirection = () => {
+  const direction = useContext(FormDirectionContext);
+  if (!direction) throw new Error(`useFormDirection ${MISSING}`);
+  return direction;
 };
 
 /** Fields and actions. Re-renders on every field change. */

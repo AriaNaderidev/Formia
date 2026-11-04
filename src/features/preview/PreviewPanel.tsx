@@ -9,7 +9,10 @@ import {
 import CodeRoundedIcon from "@mui/icons-material/CodeRounded";
 import DataObjectRoundedIcon from "@mui/icons-material/DataObjectRounded";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
-import { useFormBuilderContext } from "../form-builder/context/useFormBuilderContext";
+import {
+  useFormBuilderContext,
+  useFormDirection,
+} from "../form-builder/context/useFormBuilderContext";
 import { warmFormatter } from "@/features/codegen";
 import { SegmentedControl } from "@/ui/SegmentedControl";
 import { oneOf, useLocalStorageState } from "@/utils/useLocalStorageState";
@@ -88,6 +91,7 @@ const TabPanel = ({
 
 export const PreviewPanel = () => {
   const { fields } = useFormBuilderContext();
+  const direction = useFormDirection();
   // Rendering the preview can wait a frame; dragging and editing the canvas cannot.
   const deferredFields = useDeferredValue(fields);
 
@@ -136,14 +140,18 @@ export const PreviewPanel = () => {
 
         <div className="min-h-0 flex-1 overflow-y-auto p-4 [scrollbar-gutter:stable]">
           <TabPanel id="preview" active={active === "preview"} visited>
-            <PreviewTab fields={deferredFields} />
+            <PreviewTab fields={deferredFields} direction={direction} />
           </TabPanel>
           <Suspense fallback={<PanelSkeleton />}>
             <TabPanel id="schema" active={active === "schema"} visited={visited.has("schema")}>
-              <SchemaTab fields={deferredFields} />
+              <SchemaTab fields={deferredFields} direction={direction} />
             </TabPanel>
             <TabPanel id="code" active={active === "code"} visited={visited.has("code")}>
-              <CodeTab fields={deferredFields} active={active === "code"} />
+              <CodeTab
+                fields={deferredFields}
+                direction={direction}
+                active={active === "code"}
+              />
             </TabPanel>
           </Suspense>
         </div>

@@ -1,6 +1,6 @@
-import type { FieldSpec, FormField } from "@/features/form-schema";
+import { BUTTON_VARIANT_BY_TYPE, type FieldSpec, type FormField } from "@/features/form-schema";
 import { jsxString, jsxText } from "../naming";
-import type { Ctx } from "../types";
+import type { Ctx, TabPanel } from "../types";
 
 /** Emitted once at the top of the file so the markup stays readable. */
 export const TAILWIND_STYLES = `const styles = {
@@ -15,11 +15,11 @@ export const TAILWIND_STYLES = `const styles = {
   switchTrack:
     "relative h-6 w-11 shrink-0 rounded-full bg-gray-300 transition peer-checked:bg-indigo-600 peer-focus-visible:ring-4 peer-focus-visible:ring-indigo-500/20 after:absolute after:top-0.5 after:left-0.5 after:size-5 after:rounded-full after:bg-white after:shadow after:transition peer-checked:after:translate-x-5",
   primaryButton:
-    "inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60",
+    "inline-flex w-full items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60",
   secondaryButton:
-    "inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 active:scale-[0.98]",
+    "inline-flex w-full items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 active:scale-[0.98]",
   textButton:
-    "inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-indigo-600 transition hover:bg-indigo-50",
+    "inline-flex w-full items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-indigo-600 transition hover:bg-indigo-50",
 } as const;`;
 
 const cx = (...parts: (string | undefined | false)[]) =>
@@ -239,7 +239,8 @@ export const renderTailwindLayout = (field: FormField, ctx: Ctx): string => {
         ? `<img src=${jsxString(field.src)} alt=${jsxString(field.alt ?? "")} style={{ height: ${field.height ?? 160} }} className=${className("w-full rounded-lg object-cover")} />`
         : `{/* Image: no source set yet */}`;
     case "button": {
-      const variant = BUTTON_CLASSES[field.buttonVariant ?? "contained"];
+      const variant =
+        BUTTON_CLASSES[field.buttonVariant ?? BUTTON_VARIANT_BY_TYPE[field.buttonType ?? "submit"]];
       const cls = extra ? `{\`\${${variant}} ${extra}\`}` : `{${variant}}`;
       const label = jsxText(field.label || "Submit");
       if (field.buttonType === "reset") {
@@ -260,12 +261,38 @@ export const renderTailwindLayout = (field: FormField, ctx: Ctx): string => {
 
 export const renderTailwindDefaultActions = (ctx: Ctx) => {
   const s = ctx.binding.submitting;
-  return `<div className="flex gap-3 pt-2">${ctx.binding.withSubmitting(
+  return `<div className="grid grid-cols-[2fr_1fr] gap-3 pt-2">${ctx.binding.withSubmitting(
     `<button type="submit" disabled={${s}} className={styles.primaryButton}>{${s} ? "Submitting…" : "Submit"}</button>`,
   )}<button type="button" onClick={${ctx.binding.reset}} className={styles.secondaryButton}>Reset</button></div>`;
 };
 
-export const renderTailwindRow = (cells: string[]) =>
-  cells.length > 1
-    ? `<div className="grid gap-5 sm:grid-cols-2">${cells.join("")}</div>`
-    : cells[0];
+export const renderTailwindRow = (cells: string[], weights: [number, number] | null) => {
+  if (cells.length < 2) return cells[0];
+  const columns = weights ? `sm:grid-cols-[${weights[0]}fr_${weights[1]}fr]` : "sm:grid-cols-2";
+  return `<div className="grid gap-5 ${columns}">${cells.join("")}</div>`;
+};
+
+export const renderTailwindSection = (marker: FormField, rows: string[]) =>
+  `<fieldset className="flex flex-col gap-5 rounded-2xl border border-gray-200 p-4"><legend className="px-2 text-sm font-semibold text-gray-900">${jsxText(marker.label ?? "")}</legend>${marker.content ? `<p className="text-xs text-gray-500">${jsxText(marker.content)}</p>` : ""}${rows.join("")}</fieldset>`;
+
+/** A small "back" link above the fields, so it never competes with Next, Submit or Reset. */
+const tailwindTabBack = (panel: TabPanel, index: number) =>
+  index > 0
+    ? `<button type="button" onClick={() => setTab(${index - 1})} className="inline-flex items-center gap-1.5 self-start rounded-lg px-2 py-1 text-sm font-medium text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4 rtl:-scale-x-100"><path d="M19 12H5m7-7-7 7 7 7" /></svg>${jsxText(panel.previousLabel)}</button>`
+    : "";
+
+/** Next validates the tab first (see `goNext` in the component). */
+const tailwindTabNext = (panel: TabPanel, index: number, last: number) =>
+  index < last
+    ? `<button type="button" onClick={() => void goNext()} className={styles.primaryButton}>${jsxText(panel.nextLabel)}</button>`
+    : "";
+
+export const renderTailwindTabs = (panels: TabPanel[]) => {
+  const last = panels.length - 1;
+  const list = `<div role="tablist" aria-label="Form steps" className="flex gap-1 overflow-x-auto border-b border-gray-200">{TABS.map((item, index) => (<button key={item.title} type="button" role="tab" id={\`\${baseId}-tab-\${index}\`} aria-selected={tab === index} aria-controls={\`\${baseId}-panel-\${index}\`} onClick={() => setTab(index)} className={\`-mb-px shrink-0 border-b-2 px-4 py-2 text-sm font-medium transition \${tab === index ? "border-indigo-600 text-indigo-600" : "border-transparent text-gray-600 hover:text-gray-900"}\`}>{item.title}</button>))}</div>`;
+  const bodies = panels.map(
+    (panel, index) =>
+      `<div role="tabpanel" id={\`\${baseId}-panel-${index}\`} aria-labelledby={\`\${baseId}-tab-${index}\`} hidden={tab !== ${index}} className="flex flex-col gap-5">${tailwindTabBack(panel, index)}${panel.body}${tailwindTabNext(panel, index, last)}</div>`,
+  );
+  return [list, ...bodies].join("\n");
+};
