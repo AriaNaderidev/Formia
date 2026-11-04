@@ -1,13 +1,18 @@
-import { useRef, useState, type ReactNode } from "react";
+import { useRef, useState, type MouseEvent, type ReactNode } from "react";
 import BookmarkAddOutlinedIcon from "@mui/icons-material/BookmarkAddOutlined";
 import KeyboardOutlinedIcon from "@mui/icons-material/KeyboardOutlined";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
+import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import CloudDoneOutlinedIcon from "@mui/icons-material/CloudDoneOutlined";
 import DeleteSweepOutlinedIcon from "@mui/icons-material/DeleteSweepOutlined";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined";
 import RedoRoundedIcon from "@mui/icons-material/RedoRounded";
 import UndoRoundedIcon from "@mui/icons-material/UndoRounded";
+import Divider from "@mui/material/Divider";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
 import Tooltip from "@mui/material/Tooltip";
 import { parseFormSchema, toFormSchema } from "@/features/form-schema";
 import { Logo } from "@/ui/Logo";
@@ -52,7 +57,7 @@ const ToolButton = ({
   tooltip?: ReactNode;
   /** In aria-keyshortcuts syntax, e.g. "Control+Z". */
   shortcut?: string;
-  onClick: () => void;
+  onClick: (event: MouseEvent<HTMLButtonElement>) => void;
   disabled?: boolean;
   children: ReactNode;
 }) => (
@@ -83,6 +88,12 @@ export const AppHeader = ({
   onOpenShortcuts,
 }: AppHeaderProps) => {
   const [saveOpen, setSaveOpen] = useState(false);
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+  const closeMenu = () => setMenuAnchor(null);
+  const menuAction = (action: () => void) => {
+    closeMenu();
+    action();
+  };
   const { fields, setFields, getFields } = useFormBuilderContext();
   const fileInput = useRef<HTMLInputElement>(null);
   const isEmpty = fields.length === 0;
@@ -193,50 +204,105 @@ export const AppHeader = ({
           <RedoRoundedIcon fontSize="small" />
         </ToolButton>
 
-        <span aria-hidden className="bg-line mx-1.5 h-5 w-px" />
+        {/* From `sm` up the other actions sit inline; below it they move into the menu. */}
+        <span className="hidden sm:contents">
+          <span aria-hidden className="bg-line mx-1.5 h-5 w-px" />
 
-        <ToolButton
-          label="Import schema"
-          tooltip={<Shortcut label="Import schema" keys={sequence("I")} />}
-          onClick={() => fileInput.current?.click()}
-        >
-          <FileUploadOutlinedIcon fontSize="small" />
-        </ToolButton>
-        <ToolButton
-          label="Export schema"
-          tooltip={<Shortcut label="Export schema" keys={sequence("E")} />}
-          onClick={exportSchema}
-          disabled={isEmpty}
-        >
-          <FileDownloadOutlinedIcon fontSize="small" />
-        </ToolButton>
-        <ToolButton
-          label="Save as template"
-          tooltip={<Shortcut label="Save as template" keys={sequence("T")} />}
-          onClick={() => setSaveOpen(true)}
-          disabled={isEmpty}
-        >
-          <BookmarkAddOutlinedIcon fontSize="small" />
-        </ToolButton>
-        <ToolButton
-          label="Clear form"
-          tooltip={<Shortcut label="Clear form" keys={sequence("C")} />}
-          onClick={clearForm}
-          disabled={isEmpty}
-        >
-          <DeleteSweepOutlinedIcon fontSize="small" />
-        </ToolButton>
+          <ToolButton
+            label="Import schema"
+            tooltip={<Shortcut label="Import schema" keys={sequence("I")} />}
+            onClick={() => fileInput.current?.click()}
+          >
+            <FileUploadOutlinedIcon fontSize="small" />
+          </ToolButton>
+          <ToolButton
+            label="Export schema"
+            tooltip={<Shortcut label="Export schema" keys={sequence("E")} />}
+            onClick={exportSchema}
+            disabled={isEmpty}
+          >
+            <FileDownloadOutlinedIcon fontSize="small" />
+          </ToolButton>
+          <ToolButton
+            label="Save as template"
+            tooltip={<Shortcut label="Save as template" keys={sequence("T")} />}
+            onClick={() => setSaveOpen(true)}
+            disabled={isEmpty}
+          >
+            <BookmarkAddOutlinedIcon fontSize="small" />
+          </ToolButton>
+          <ToolButton
+            label="Clear form"
+            tooltip={<Shortcut label="Clear form" keys={sequence("C")} />}
+            onClick={clearForm}
+            disabled={isEmpty}
+          >
+            <DeleteSweepOutlinedIcon fontSize="small" />
+          </ToolButton>
 
-        <span aria-hidden className="bg-line mx-1.5 h-5 w-px" />
+          <span aria-hidden className="bg-line mx-1.5 h-5 w-px" />
 
-        <ToolButton
-          label="Keyboard shortcuts"
-          tooltip={<Shortcut label="Keyboard shortcuts" keys="?" />}
-          shortcut="Shift+? Control+/ Meta+/"
-          onClick={onOpenShortcuts}
+          <ToolButton
+            label="Keyboard shortcuts"
+            tooltip={<Shortcut label="Keyboard shortcuts" keys="?" />}
+            shortcut="Shift+? Control+/ Meta+/"
+            onClick={onOpenShortcuts}
+          >
+            <KeyboardOutlinedIcon fontSize="small" />
+          </ToolButton>
+        </span>
+
+        <span className="sm:hidden">
+          <ToolButton
+            label="More actions"
+            onClick={(event) => setMenuAnchor(event.currentTarget)}
+          >
+            <MoreHorizRoundedIcon fontSize="small" />
+          </ToolButton>
+        </span>
+        <Menu
+          anchorEl={menuAnchor}
+          open={menuAnchor !== null}
+          onClose={closeMenu}
+          slotProps={{ list: { "aria-label": "More actions", dense: true } }}
         >
-          <KeyboardOutlinedIcon fontSize="small" />
-        </ToolButton>
+          <MenuItem
+            onClick={() => menuAction(() => fileInput.current?.click())}
+          >
+            <ListItemIcon>
+              <FileUploadOutlinedIcon fontSize="small" />
+            </ListItemIcon>
+            Import schema
+          </MenuItem>
+          <MenuItem disabled={isEmpty} onClick={() => menuAction(exportSchema)}>
+            <ListItemIcon>
+              <FileDownloadOutlinedIcon fontSize="small" />
+            </ListItemIcon>
+            Export schema
+          </MenuItem>
+          <MenuItem
+            disabled={isEmpty}
+            onClick={() => menuAction(() => setSaveOpen(true))}
+          >
+            <ListItemIcon>
+              <BookmarkAddOutlinedIcon fontSize="small" />
+            </ListItemIcon>
+            Save as template
+          </MenuItem>
+          <MenuItem disabled={isEmpty} onClick={() => menuAction(clearForm)}>
+            <ListItemIcon>
+              <DeleteSweepOutlinedIcon fontSize="small" />
+            </ListItemIcon>
+            Clear form
+          </MenuItem>
+          <Divider />
+          <MenuItem onClick={() => menuAction(onOpenShortcuts)}>
+            <ListItemIcon>
+              <KeyboardOutlinedIcon fontSize="small" />
+            </ListItemIcon>
+            Keyboard shortcuts
+          </MenuItem>
+        </Menu>
 
         <input
           ref={fileInput}
