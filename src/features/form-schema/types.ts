@@ -95,6 +95,9 @@ export type FormField = {
   /** Fields that share a rowId (and sit next to each other) render side by side. */
   rowId?: string;
 
+  /** date, time, datetime: the hint shown while the field is empty. */
+  placeholder?: string;
+
   /** slider, rating */
   min?: number;
   max?: number;

@@ -449,6 +449,7 @@ export const FieldControl = memo(function FieldControl({
             kind={config.type}
             id={spec.name}
             label={spec.label}
+            placeholder={config.placeholder}
             value={String(field.value ?? "")}
             onChange={field.onChange}
             onBlur={field.onBlur}
