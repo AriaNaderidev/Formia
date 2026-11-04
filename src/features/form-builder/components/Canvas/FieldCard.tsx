@@ -7,12 +7,18 @@ import {
   useRef,
   useState,
   type KeyboardEvent,
+  type ReactNode,
 } from "react";
 import type { FormField } from "@/features/form-schema";
 import { announce } from "@/ui/announce";
 import { toast } from "@/ui/toast";
 import { fieldTriggerId, focusById, MAIN_ID } from "@/utils/focus";
-import { groupIntoRows, shiftRowOf } from "@/utils/rows_helper";
+import {
+  findContainerEnd,
+  groupIntoRows,
+  isContainerStart,
+  shiftRowOf,
+} from "@/utils/rows_helper";
 import { useFormBuilderActions } from "../../context/useFormBuilderContext";
 import { FieldActions } from "./FieldActions";
 import { getFieldTitle } from "./fieldTitle";
@@ -38,6 +44,10 @@ type FieldCardProps = {
   /** The whole row is fading, so the card must not fade a second time. */
   rowLeaving: boolean;
   onLeavingChange: (id: string, leaving: boolean) => void;
+  /** Shown before the title: the row's drag handle. */
+  leading?: ReactNode;
+  /** Shown with the card's actions: "add a field beside". */
+  trailing?: ReactNode;
 };
 
 export const FieldCard = memo(function FieldCard({
@@ -46,6 +56,8 @@ export const FieldCard = memo(function FieldCard({
   isLeaving,
   rowLeaving,
   onLeavingChange,
+  leading,
+  trailing,
 }: FieldCardProps) {
   const { setFields, getFields } = useFormBuilderActions();
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -72,16 +84,22 @@ export const FieldCard = memo(function FieldCard({
     const index = getFields().findIndex((item) => item.id === field.id);
     if (index === -1) return;
     const removed = getFields()[index];
+    // Deleting a tab or section removes the area but keeps the fields inside it.
+    const endIndex = isContainerStart(removed.type) ? findContainerEnd(getFields(), index) : -1;
+    const removedEnd = endIndex === -1 ? undefined : getFields()[endIndex];
 
     // The card is about to disappear: keyboard focus would fall back to <body>.
     const neighbour = getFields()[index + 1] ?? getFields()[index - 1];
     const hadFocus = cardRef.current?.contains(document.activeElement) ?? false;
 
     recordRowPositions();
-    setFields((prev) => prev.filter((item) => item.id !== field.id));
+    setFields((prev) =>
+      prev.filter((item) => item.id !== field.id && item.id !== removedEnd?.id),
+    );
     if (hadFocus) focusById(neighbour ? fieldTriggerId(neighbour.id) : MAIN_ID);
 
     toast.info(`Deleted “${title}”`, {
+      description: removedEnd ? "The fields inside were kept." : undefined,
       duration: 6000,
       action: {
         label: "Undo",
@@ -91,6 +109,7 @@ export const FieldCard = memo(function FieldCard({
             if (prev.some((item) => item.id === removed.id)) return prev;
             const next = [...prev];
             next.splice(Math.min(index, next.length), 0, removed);
+            if (removedEnd) next.splice(Math.min(endIndex, next.length), 0, removedEnd);
             return next;
           });
           focusById(fieldTriggerId(removed.id));
@@ -173,8 +192,9 @@ export const FieldCard = memo(function FieldCard({
           <div
             ref={cardRef}
             onKeyDown={onKeyDown}
-            className={`flex min-w-0 items-center gap-1 rounded-xl border bg-white py-2 ps-2 pe-1 transition-[border-color,box-shadow,translate,scale] duration-200 ${cardState}`}
+            className={`flex min-w-0 items-center gap-1 rounded-xl border bg-white py-2 ps-1 pe-1 transition-[border-color,box-shadow,translate,scale] duration-200 ${cardState}`}
           >
+            {leading}
             {/* Clicking the card body opens the editor. */}
             <button
               type="button"
@@ -204,6 +224,7 @@ export const FieldCard = memo(function FieldCard({
               label={title}
               onEdit={openEditor}
               onDelete={startDelete}
+              before={trailing}
             />
           </div>
         </div>

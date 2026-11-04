@@ -11,27 +11,23 @@ type RowHandleProps = {
   listeners: DraggableSyntheticListeners;
 };
 
-/** Drags the whole row. Sits in the gutter at the row's start edge. */
+/** Drags the whole row. Sits inside the row's first card, so it stays within any box around it. */
 export const RowHandle = ({
   isDragging,
   setActivatorNodeRef,
   attributes,
   listeners,
 }: RowHandleProps) => (
-  <div className="flex items-center sm:absolute sm:inset-y-0 sm:end-full sm:pe-1.5">
-    <button
-      ref={setActivatorNodeRef}
-      type="button"
-      {...attributes}
-      {...listeners}
-      aria-label="Move row"
-      className={`hover:bg-plum/5 hover:text-plum focus-visible:outline-plum grid h-9 w-6 touch-none place-items-center rounded-md transition-[opacity,color,background-color] duration-150 focus-visible:opacity-100 focus-visible:outline-2 ${
-        isDragging
-          ? "text-plum cursor-grabbing opacity-100"
-          : "text-ink-muted/60 cursor-grab opacity-0 group-hover/row:opacity-100 max-sm:opacity-100 [@media(pointer:coarse)]:opacity-100"
-      }`}
-    >
-      <DragIndicatorIcon fontSize="small" />
-    </button>
-  </div>
+  <button
+    ref={setActivatorNodeRef}
+    type="button"
+    {...attributes}
+    {...listeners}
+    aria-label="Move row"
+    className={`hover:bg-plum/5 hover:text-plum focus-visible:outline-plum grid h-9 w-6 shrink-0 touch-none place-items-center rounded-md transition-[color,background-color] duration-150 focus-visible:outline-2 ${
+      isDragging ? "text-plum cursor-grabbing" : "text-ink-muted/60 cursor-grab"
+    }`}
+  >
+    <DragIndicatorIcon fontSize="small" />
+  </button>
 );

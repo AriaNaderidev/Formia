@@ -4,7 +4,7 @@ import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
 import Typography from "@mui/material/Typography";
-import type { FormField } from "@/features/form-schema";
+import { BUTTON_VARIANT_BY_TYPE, type FormField } from "@/features/form-schema";
 
 const HEADING_VARIANTS = {
   h1: "h4",
@@ -93,10 +93,11 @@ export const LayoutElement = memo(function LayoutElement({
       );
 
     case "button": {
-      const variant = field.buttonVariant ?? "contained";
       const type = field.buttonType ?? "submit";
+      const variant = field.buttonVariant ?? BUTTON_VARIANT_BY_TYPE[type];
       return (
         <Button
+          fullWidth
           type={type === "submit" ? "submit" : "button"}
           variant={variant}
           loading={type === "submit" ? isSubmitting : undefined}

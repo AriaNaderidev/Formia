@@ -16,6 +16,8 @@ export const TAB_LABELS: Record<EditorTab, string> = {
 
 /** Layout and content elements: they carry no value, so they have no label/name/validation. */
 const CONTENT_TYPES = new Set<FieldType>([
+  "tab",
+  "section",
   "divider",
   "spacer",
   "heading",

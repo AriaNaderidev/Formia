@@ -6,7 +6,7 @@ import {
 } from "react";
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import {
-  createFieldFromType,
+  createFieldsFromType,
   getCatalogField,
   isPaletteId,
   type FormField,
@@ -50,8 +50,8 @@ export const useFormBuilderDnd = (
 
       const side = getDropSide(active, over);
       setFields((prev) => {
-        const nextField = createFieldFromType(catalogField.type, prev);
-        if (overKey === CANVAS_DROPPABLE_ID) return [...prev, nextField];
+        const nextField = createFieldsFromType(catalogField.type, prev);
+        if (overKey === CANVAS_DROPPABLE_ID) return [...prev, ...nextField];
         return side === "above"
           ? insertFieldBeforeRow(prev, nextField, overKey)
           : insertFieldAfterRow(prev, nextField, overKey);
@@ -59,14 +59,15 @@ export const useFormBuilderDnd = (
       return;
     }
 
-    // Reorder: move the whole row so pairs stay together.
+    // Reorder: move the whole row next to the hovered one, so pairs stay together.
     if (
       overKey === CANVAS_DROPPABLE_ID ||
       activeKey === overKey
     ) {
       return;
     }
-    setFields((prev) => moveRow(prev, activeKey, overKey));
+    const side = getDropSide(active, over);
+    setFields((prev) => moveRow(prev, activeKey, overKey, side));
   };
 
   return { activeId, handleDragStart, handleDragEnd, handleDragCancel };

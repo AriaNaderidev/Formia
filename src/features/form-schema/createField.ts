@@ -37,6 +37,9 @@ export const createFieldFromType = (
   type: FieldType,
   existing: readonly FormField[] = [],
 ): FormField => {
+  // Not in the catalog: it only ever comes with a tab or a section.
+  if (type === "end") return { id: createFieldId(), name: "end", type };
+
   const template = getCatalogField(paletteId(type));
 
   if (!template) {
@@ -51,4 +54,18 @@ export const createFieldFromType = (
     id: createFieldId(),
     name: uniqueName(base, taken),
   };
+};
+
+/**
+ * What a palette item adds to the form: the field itself, or for a tab or section the
+ * container plus the `end` that closes it, so it starts out as an empty area.
+ */
+export const createFieldsFromType = (
+  type: FieldType,
+  existing: readonly FormField[] = [],
+): FormField[] => {
+  const field = createFieldFromType(type, existing);
+  return type === "tab" || type === "section"
+    ? [field, createFieldFromType("end")]
+    : [field];
 };

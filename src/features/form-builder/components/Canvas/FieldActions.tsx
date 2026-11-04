@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import IconButton from "@mui/material/IconButton";
@@ -9,20 +10,29 @@ type FieldActionsProps = {
   label: string;
   onEdit: () => void;
   onDelete: () => void;
+  /** Extra buttons shown first, e.g. "add a field beside". */
+  before?: ReactNode;
 };
 
 export const FieldActions = ({
   label,
   onEdit,
   onDelete,
+  before,
 }: FieldActionsProps) => (
   <div className="flex shrink-0 items-center">
+    {before}
     <Tooltip title="Edit" enterDelay={500}>
       <IconButton
         size="small"
         aria-label={`Edit ${label}`}
         onClick={onEdit}
-        sx={{ color: "text.secondary", "&:hover": { color: "primary.main" } }}
+        sx={{
+          // Tapping the card already opens the editor; on a narrow card the room is for the title.
+          display: { xs: "none", sm: "inline-flex" },
+          color: "text.secondary",
+          "&:hover": { color: "primary.main" },
+        }}
       >
         <EditOutlinedIcon fontSize="small" />
       </IconButton>

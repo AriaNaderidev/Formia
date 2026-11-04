@@ -2,12 +2,31 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import type { FieldType } from "@/features/form-schema";
 import { NumberControl } from "./NumberControl";
+import { TextControl } from "./TextControl";
 
-/** Numeric settings that only some field types have. */
+/** What the field shows when no placeholder is set (see DateTimeField). */
+const PICKER_PLACEHOLDERS = {
+  date: "Select a date",
+  time: "Select a time",
+  datetime: "Select date and time",
+} as const;
+
+/** Settings that only some field types have. */
 export const TypeSettings = ({ type }: { type: FieldType }) => {
   if (type === "textarea") {
     return (
       <NumberControl name="rowNumber" label="Visible rows" min={1} max={20} />
+    );
+  }
+
+  if (type === "date" || type === "time" || type === "datetime") {
+    return (
+      <TextControl
+        name="placeholder"
+        label="Placeholder text"
+        placeholder={PICKER_PLACEHOLDERS[type]}
+        helperText="Shown inside the field until a value is chosen"
+      />
     );
   }
 

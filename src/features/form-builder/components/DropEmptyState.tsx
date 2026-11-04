@@ -1,6 +1,10 @@
 import { useDroppable } from "@dnd-kit/core";
 import EmptyStateImage from "@/assets/images/Empty.webp";
-import { instantiateTemplate, type FormTemplate } from "@/features/form-schema";
+import {
+  countElements,
+  instantiateTemplate,
+  type FormTemplate,
+} from "@/features/form-schema";
 import { announce } from "@/ui/announce";
 import { toast } from "@/ui/toast";
 import { focusWhenReady } from "@/utils/focus";
@@ -18,14 +22,15 @@ export const DropEmptyState = ({ onBrowseFields }: DropEmptyStateProps) => {
     id: CANVAS_DROPPABLE_ID,
   });
   const isDragging = Boolean(active);
-  const { setFields } = useFormBuilderActions();
+  const { setFields, setDirection } = useFormBuilderActions();
 
   const caption = isOver ? "Release to add your first field" : "Drop it here";
 
   const applyTemplate = (template: FormTemplate) => {
     setFields(instantiateTemplate(template));
+    setDirection(template.direction ?? "ltr");
     // The gallery is replaced by the form, so focus would drop to the page.
-    announce(`${template.title} template added with ${template.fields.length} elements.`);
+    announce(`${template.title} template added with ${countElements(template)} elements.`);
     focusWhenReady(() => document.querySelector<HTMLElement>("[data-field-trigger]"));
     toast.success(`${template.title} template added`, {
       description: "Edit any field, or press Undo to start over.",
@@ -50,12 +55,13 @@ export const DropEmptyState = ({ onBrowseFields }: DropEmptyStateProps) => {
           isDragging ? "scale-95 opacity-0" : "scale-100 opacity-100"
         }`}
       >
-        <div className="mx-auto flex min-h-full w-full max-w-4xl flex-col items-center justify-center gap-y-7 px-4 py-6 sm:px-8 sm:py-10">
+        <div className="mx-auto flex min-h-full w-full max-w-4xl flex-col items-center justify-center gap-y-4 px-4 py-4 sm:px-8 sm:py-6">
           <div
             className="flex flex-col items-center gap-3 select-none"
             draggable={false}
           >
-            <div className="motion-safe:animate-float">
+            {/* The picture goes first when the window is short, so the templates stay in view. */}
+            <div className="motion-safe:animate-float [@media(max-height:820px)]:hidden">
               <img
                 src={EmptyStateImage}
                 alt=""
@@ -65,7 +71,7 @@ export const DropEmptyState = ({ onBrowseFields }: DropEmptyStateProps) => {
                 height={640}
                 fetchPriority="high"
                 decoding="async"
-                className="h-32 w-auto rounded-md object-contain sm:h-44"
+                className="h-28 w-auto rounded-md object-contain sm:h-36"
               />
             </div>
 
@@ -87,7 +93,7 @@ export const DropEmptyState = ({ onBrowseFields }: DropEmptyStateProps) => {
             </div>
           </div>
 
-          <div className="w-full pt-8">
+          <div className="w-full">
             <TemplateGallery onSelect={applyTemplate} />
           </div>
         </div>

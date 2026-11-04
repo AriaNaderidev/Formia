@@ -35,6 +35,7 @@ const read = (): FormTemplate[] => {
               title: entry.title,
               description: typeof entry.description === "string" ? entry.description : "",
               fields: entry.fields,
+              ...(entry.direction === "rtl" ? { direction: "rtl" as const } : {}),
               custom: true,
             },
           ]

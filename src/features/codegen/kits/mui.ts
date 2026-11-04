@@ -1,6 +1,6 @@
-import type { FieldSpec, FormField } from "@/features/form-schema";
+import { BUTTON_VARIANT_BY_TYPE, type FieldSpec, type FormField } from "@/features/form-schema";
 import { jsxString, jsxText } from "../naming";
-import type { Ctx } from "../types";
+import type { Ctx, TabPanel } from "../types";
 
 /** Optional JSX attributes: ` disabled`, ` className="..."`. */
 const flags = (field: FormField, spec?: FieldSpec) =>
@@ -198,17 +198,17 @@ export const renderMuiLayout = (field: FormField, ctx: Ctx): string => {
         : `{/* Image: no source set yet */}`;
     case "button": {
       ui.add("Button");
-      const variant = field.buttonVariant ?? "contained";
+      const variant = field.buttonVariant ?? BUTTON_VARIANT_BY_TYPE[field.buttonType ?? "submit"];
       const label = jsxText(field.label || "Submit");
       if (field.buttonType === "reset") {
-        return `<Button variant="${variant}" onClick={${ctx.binding.reset}}${cls}>${label}</Button>`;
+        return `<Button fullWidth variant="${variant}" onClick={${ctx.binding.reset}}${cls}>${label}</Button>`;
       }
       if (field.buttonType === "button") {
-        return `<Button variant="${variant}"${cls}>${label}</Button>`;
+        return `<Button fullWidth variant="${variant}"${cls}>${label}</Button>`;
       }
       const s = ctx.binding.submitting;
       return ctx.binding.withSubmitting(
-        `<Button type="submit" variant="${variant}" loading={${s}}${cls}>${label}</Button>`,
+        `<Button fullWidth type="submit" variant="${variant}" loading={${s}}${cls}>${label}</Button>`,
       );
     }
     default:
@@ -217,15 +217,50 @@ export const renderMuiLayout = (field: FormField, ctx: Ctx): string => {
 };
 
 export const renderMuiDefaultActions = (ctx: Ctx) => {
-  ctx.uiImports.add("Stack").add("Button");
+  ctx.uiImports.add("Box").add("Button");
   const s = ctx.binding.submitting;
-  return `<Stack direction="row" spacing={1.5}>${ctx.binding.withSubmitting(
-    `<Button type="submit" variant="contained" loading={${s}}>Submit</Button>`,
-  )}<Button variant="outlined" onClick={${ctx.binding.reset}}>Reset</Button></Stack>`;
+  return `<Box sx={{ display: "grid", gap: 1.5, gridTemplateColumns: "2fr 1fr" }}>${ctx.binding.withSubmitting(
+    `<Button fullWidth type="submit" variant="contained" loading={${s}}>Submit</Button>`,
+  )}<Button fullWidth variant="outlined" onClick={${ctx.binding.reset}}>Reset</Button></Box>`;
 };
 
-export const renderMuiRow = (cells: string[], ctx: Ctx) => {
+export const renderMuiRow = (cells: string[], weights: [number, number] | null, ctx: Ctx) => {
   if (cells.length < 2) return cells[0];
   ctx.uiImports.add("Box");
-  return `<Box sx={{ display: "grid", gap: 2.5, gridTemplateColumns: { sm: "repeat(2, minmax(0, 1fr))" } }}>${cells.join("")}</Box>`;
+  const columns = weights
+    ? `"${weights[0]}fr ${weights[1]}fr"`
+    : `"repeat(2, minmax(0, 1fr))"`;
+  return `<Box sx={{ display: "grid", gap: 2.5, gridTemplateColumns: { sm: ${columns} } }}>${cells.join("")}</Box>`;
+};
+
+export const renderMuiSection = (marker: FormField, rows: string[], ctx: Ctx) => {
+  ctx.uiImports.add("Box").add("Typography");
+  const description = marker.content
+    ? `<Typography variant="caption" color="text.secondary">${jsxText(marker.content)}</Typography>`
+    : "";
+  return `<Box component="section" sx={{ display: "flex", flexDirection: "column", gap: 2.5, p: 2, border: 1, borderColor: "divider", borderRadius: 3 }}><Box><Typography variant="subtitle2" component="h3" sx={{ fontWeight: 700 }}>${jsxText(marker.label ?? "")}</Typography>${description}</Box>${rows.join("")}</Box>`;
+};
+
+/** A small "back" link above the fields, so it never competes with Next, Submit or Reset. */
+const muiTabBack = (panel: TabPanel, index: number, ctx: Ctx) => {
+  if (index === 0) return "";
+  ctx.uses.add("backIcon");
+  return `<Button size="small" color="inherit" startIcon={<ArrowBackRoundedIcon sx={{ "[dir=rtl] &": { transform: "scaleX(-1)" } }} />} onClick={() => setTab(${index - 1})} sx={{ alignSelf: "flex-start" }}>${jsxText(panel.previousLabel)}</Button>`;
+};
+
+/** Next validates the tab first (see `goNext` in the component). */
+const muiTabNext = (panel: TabPanel, index: number, last: number) =>
+  index < last
+    ? `<Button fullWidth variant="contained" onClick={() => void goNext()}>${jsxText(panel.nextLabel)}</Button>`
+    : "";
+
+export const renderMuiTabs = (panels: TabPanel[], ctx: Ctx) => {
+  ctx.uiImports.add("Box").add("Button").add("Tab").add("Tabs");
+  const last = panels.length - 1;
+  const list = `<Tabs value={tab} onChange={(_, next: number) => setTab(next)} variant="scrollable" scrollButtons="auto" allowScrollButtonsMobile aria-label="Form steps">{TABS.map((item, index) => (<Tab key={item.title} label={item.title} id={\`\${baseId}-tab-\${index}\`} aria-controls={\`\${baseId}-panel-\${index}\`} />))}</Tabs>`;
+  const bodies = panels.map(
+    (panel, index) =>
+      `<Box role="tabpanel" id={\`\${baseId}-panel-${index}\`} aria-labelledby={\`\${baseId}-tab-${index}\`} sx={{ display: tab === ${index} ? "flex" : "none", flexDirection: "column", gap: 2.5 }}>${muiTabBack(panel, index, ctx)}${panel.body}${muiTabNext(panel, index, last)}</Box>`,
+  );
+  return [list, ...bodies].join("\n");
 };
