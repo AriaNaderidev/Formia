@@ -30,8 +30,12 @@ export const DropEmptyState = ({ onBrowseFields }: DropEmptyStateProps) => {
     setFields(instantiateTemplate(template));
     setDirection(template.direction ?? "ltr");
     // The gallery is replaced by the form, so focus would drop to the page.
-    announce(`${template.title} template added with ${countElements(template)} elements.`);
-    focusWhenReady(() => document.querySelector<HTMLElement>("[data-field-trigger]"));
+    announce(
+      `${template.title} template added with ${countElements(template)} elements.`,
+    );
+    focusWhenReady(() =>
+      document.querySelector<HTMLElement>("[data-field-trigger]"),
+    );
     toast.success(`${template.title} template added`, {
       description: "Edit any field, or press Undo to start over.",
     });
@@ -55,13 +59,13 @@ export const DropEmptyState = ({ onBrowseFields }: DropEmptyStateProps) => {
           isDragging ? "scale-95 opacity-0" : "scale-100 opacity-100"
         }`}
       >
-        <div className="mx-auto flex min-h-full w-full max-w-4xl flex-col items-center justify-center gap-y-4 px-4 py-4 sm:px-8 sm:py-6">
+        <div className="mx-auto flex min-h-full w-full max-w-4xl flex-col items-center justify-center gap-y-15 px-4 [@media(max-height:820px)]:gap-y-8 py-4 sm:px-8 sm:py-6">
           <div
             className="flex flex-col items-center gap-3 select-none"
             draggable={false}
           >
-            {/* The picture goes first when the window is short, so the templates stay in view. */}
-            <div className="motion-safe:animate-float [@media(max-height:820px)]:hidden">
+            {/* The picture shrinks when the window is short, so the templates stay in view. */}
+            <div className="motion-safe:animate-float">
               <img
                 src={EmptyStateImage}
                 alt=""
@@ -71,7 +75,7 @@ export const DropEmptyState = ({ onBrowseFields }: DropEmptyStateProps) => {
                 height={640}
                 fetchPriority="high"
                 decoding="async"
-                className="h-28 w-auto rounded-md object-contain sm:h-36"
+                className="h-28 w-auto rounded-md object-contain sm:h-36 [@media(max-height:820px)]:h-20 sm:[@media(max-height:820px)]:h-24"
               />
             </div>
 

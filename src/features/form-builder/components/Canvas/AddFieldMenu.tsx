@@ -97,7 +97,7 @@ export const AddFieldMenu = ({
           color="text.secondary"
           sx={{ display: "block", px: 0.5, pb: 0.75 }}
         >
-          Adding beside this field
+          Adding a field
         </Typography>
         <OutlinedInput
           autoFocus
@@ -115,7 +115,7 @@ export const AddFieldMenu = ({
         />
       </div>
 
-      <div className="max-h-[min(18rem,50vh)] overflow-y-auto p-1">
+      <div className="max-h-[min(18rem,50dvh)] overflow-y-auto p-1">
         {groups.length === 0 ? (
           <Typography
             variant="body2"

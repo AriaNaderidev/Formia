@@ -1,4 +1,4 @@
-import type { FormTemplate } from "./templates";
+import type { FormTemplate, TemplateFamily } from "./templates";
 
 /**
  * Longer templates built from tabs, sections and side-by-side fields, each in English
@@ -529,4 +529,7 @@ const userFa: FormTemplate = {
   ],
 };
 
-export const STRUCTURED_TEMPLATES: FormTemplate[] = [meetingEn, meetingFa, userEn, userFa];
+export const STRUCTURED_TEMPLATES: TemplateFamily[] = [
+  { id: "meeting", variants: { en: meetingEn, fa: meetingFa } },
+  { id: "user", variants: { en: userEn, fa: userFa } },
+];
