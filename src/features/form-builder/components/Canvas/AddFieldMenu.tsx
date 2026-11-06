@@ -115,7 +115,7 @@ export const AddFieldMenu = ({
         />
       </div>
 
-      <div className="max-h-[min(18rem,50vh)] overflow-y-auto p-1">
+      <div className="max-h-[min(18rem,50dvh)] overflow-y-auto p-1">
         {groups.length === 0 ? (
           <Typography
             variant="body2"
