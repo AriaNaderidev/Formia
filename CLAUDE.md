@@ -94,6 +94,21 @@ These conventions are the user's own. Follow them.
 - **Pre-commit hook** runs `lint-staged`, which runs `eslint --fix` on staged JS/TS files. If it fails, fix the code and make a new commit. Never use `--no-verify`.
 - Line endings: `core.autocrlf` is `true` on this machine and many existing files are CRLF. Git will warn "LF will be replaced by CRLF". Those warnings are expected. Do not reformat unrelated files to change line endings.
 
+## Pull requests
+
+Open a PR only when asked. Never add Claude attribution or "Generated with" lines to a PR body.
+
+**Regular PR (feature or fix branch into `dev`)**
+- Base is `dev`. Head is the branch the user is already on (named like `18-fix-responsiveness-on-small-screens`). **Never create a new branch for a PR.** If the current branch is `dev` or it is unclear which branch to use, ask first; the user pushes their commits to their own numbered branch.
+- Title: a conventional commit, `type(Scope): Subject`.
+- Body: `## Summary` (bullets of what changed) and `## Test plan` (a checklist of manual checks, ending with the `tsc` and `eslint` line).
+
+**Release PR (`dev` into `production`)**
+- Base is `production`, head is `dev`. Check what is new with `git log origin/production..origin/dev` first.
+- Title: `Release: <short list of the main changes>`.
+- Body, short and clean, for readers who did not see the PRs: `## Summary` (one or two sentences and the commit count), `## New features`, `## Improvements`, `## Notes for release` (new dependencies, schema or data changes, limitations), `## Testing` (what passes, and what still needs a manual pass).
+- Describe changes in user terms, not file names.
+
 ## Working with this machine
 
 - The shell is Windows: Git Bash for the Bash tool, PowerShell for the PowerShell tool. Use forward slashes in Bash and `/c/...`-style paths where needed.
