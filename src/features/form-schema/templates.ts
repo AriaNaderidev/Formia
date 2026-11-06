@@ -1,4 +1,5 @@
 import { createFieldFromType, createFieldId } from "./createField";
+import { BASIC_TEMPLATES_FA } from "./templatesBasicFa";
 import { STRUCTURED_TEMPLATES } from "./templatesStructured";
 import type { FieldType, FormDirection, FormField } from "./types";
 
@@ -303,7 +304,21 @@ const BASIC_TEMPLATES: FormTemplate[] = [
   },
 ];
 
-export const FORM_TEMPLATES: FormTemplate[] = [...BASIC_TEMPLATES, ...STRUCTURED_TEMPLATES];
+export type TemplateLanguage = "en" | "fa";
+
+/** One template offered in every language; the user picks which one to apply. */
+export type TemplateFamily = {
+  id: string;
+  variants: Record<TemplateLanguage, FormTemplate>;
+};
+
+export const TEMPLATE_FAMILIES: TemplateFamily[] = [
+  ...BASIC_TEMPLATES.map((english) => ({
+    id: english.id,
+    variants: { en: english, fa: BASIC_TEMPLATES_FA[english.id] },
+  })),
+  ...STRUCTURED_TEMPLATES,
+];
 
 /** Tabs, sections and their closing markers are structure, not elements the user adds. */
 export const countElements = (template: FormTemplate) =>

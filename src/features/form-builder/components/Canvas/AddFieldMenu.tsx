@@ -97,7 +97,7 @@ export const AddFieldMenu = ({
           color="text.secondary"
           sx={{ display: "block", px: 0.5, pb: 0.75 }}
         >
-          Adding beside this field
+          Adding a field
         </Typography>
         <OutlinedInput
           autoFocus

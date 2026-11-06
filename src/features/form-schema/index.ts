@@ -33,10 +33,12 @@ export * from "./fieldSpec";
 export * from "./zodPlan";
 export {
   countElements,
-  FORM_TEMPLATES,
   instantiateTemplate,
+  TEMPLATE_FAMILIES,
   templateFromFields,
   type FormTemplate,
+  type TemplateFamily,
+  type TemplateLanguage,
 } from "./templates";
 export * from "@/utils/rows_helper";
 export * from "./temporalBounds";

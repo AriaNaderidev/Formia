@@ -24,8 +24,10 @@ import StarBorderIcon from "@mui/icons-material/StarBorder";
 import SupportAgentOutlinedIcon from "@mui/icons-material/SupportAgentOutlined";
 import {
   countElements,
-  FORM_TEMPLATES,
+  TEMPLATE_FAMILIES,
   type FormTemplate,
+  type TemplateFamily,
+  type TemplateLanguage,
 } from "@/features/form-schema";
 import { toast } from "@/ui/toast";
 import { focusWhenReady } from "@/utils/focus";
@@ -41,18 +43,20 @@ const ICONS: Record<string, ElementType> = {
   "event-registration": ConfirmationNumberOutlinedIcon,
   "support-ticket": SupportAgentOutlinedIcon,
   appointment: CalendarMonthOutlinedIcon,
-  "meeting-en": GroupsOutlinedIcon,
-  "meeting-fa": GroupsOutlinedIcon,
-  "user-en": ManageAccountsOutlinedIcon,
-  "user-fa": ManageAccountsOutlinedIcon,
+  meeting: GroupsOutlinedIcon,
+  user: ManageAccountsOutlinedIcon,
 };
-/** Right-to-left templates are the Persian ones; they get a group of their own. */
-const PERSIAN_TEMPLATES = FORM_TEMPLATES.filter(
-  (template) => template.direction === "rtl",
-);
-const COMMON_TEMPLATES = FORM_TEMPLATES.filter(
-  (template) => template.direction !== "rtl",
-);
+
+/** A template saved by the user, or a shipped one that comes in several languages. */
+type GalleryItem = FormTemplate | TemplateFamily;
+
+const isFamily = (item: GalleryItem): item is TemplateFamily =>
+  "variants" in item;
+
+const LANGUAGES: { id: TemplateLanguage; short: string; name: string }[] = [
+  { id: "en", short: "EN", name: "English" },
+  { id: "fa", short: "فا", name: "Persian" },
+];
 
 type TemplateGalleryProps = {
   onSelect: (template: FormTemplate) => void;
@@ -104,17 +108,50 @@ const neighbourCard = (cards: HTMLElement[], index: number, key: string) => {
   return best;
 };
 
+const LanguageToggle = ({
+  value,
+  onChange,
+}: {
+  value: TemplateLanguage;
+  onChange: (language: TemplateLanguage) => void;
+}) => (
+  <div
+    role="group"
+    aria-label="Template language"
+    className="border-line absolute end-2.5 top-2 inline-flex rounded-full border bg-white p-0.5 text-[11px] font-medium"
+  >
+    {LANGUAGES.map(({ id, short, name }) => (
+      <button
+        key={id}
+        type="button"
+        lang={id}
+        aria-label={name}
+        aria-pressed={value === id}
+        onClick={() => onChange(id)}
+        className={`focus-visible:outline-plum min-w-8 rounded-full px-2 py-0.5 transition-colors duration-150 focus-visible:outline-2 ${
+          value === id ? "bg-plum text-white" : "text-ink-muted hover:text-plum"
+        }`}
+      >
+        {short}
+      </button>
+    ))}
+  </div>
+);
+
 const TemplateCard = ({
-  template,
+  item,
   index,
   onSelect,
 }: {
-  template: FormTemplate;
+  item: GalleryItem;
   index: number;
   onSelect: (template: FormTemplate) => void;
 }) => {
   const metaId = useId();
-  const Icon = ICONS[template.id] ?? BookmarkBorderIcon;
+  const [language, setLanguage] = useState<TemplateLanguage>("en");
+  const family = isFamily(item);
+  const template = isFamily(item) ? item.variants[language] : item;
+  const Icon = ICONS[item.id] ?? BookmarkBorderIcon;
   const count = countElements(template);
 
   const remove = () => {
@@ -154,7 +191,7 @@ const TemplateCard = ({
       <button
         type="button"
         data-template-card
-        data-template-id={template.id}
+        data-template-id={item.id}
         aria-describedby={metaId}
         aria-keyshortcuts={template.custom ? "Delete" : undefined}
         onKeyDown={(event) => {
@@ -169,7 +206,7 @@ const TemplateCard = ({
           }
         }}
         onClick={() => onSelect(template)}
-        className="border-line hover:border-plum/60 focus-visible:outline-plum flex h-full w-full items-start gap-3 rounded-2xl border bg-white p-3.5 text-start shadow-sm transition-[border-color,box-shadow,translate,scale] duration-200 hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-2 active:scale-[0.98]"
+        className={`border-line hover:border-plum/60 focus-visible:outline-plum flex h-full w-full items-start gap-3 rounded-2xl border bg-white p-3.5 text-start ${family ? "pt-12" : ""} shadow-sm transition-[border-color,box-shadow,translate,scale] duration-200 hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-2 active:scale-[0.98]`}
       >
         <span
           aria-hidden
@@ -178,7 +215,6 @@ const TemplateCard = ({
           <Icon fontSize="small" />
         </span>
         <span className="min-w-0 flex-1">
-          {/* dir="auto": a Persian template reads right-to-left on its card. */}
           <span
             dir="auto"
             className="text-ink block truncate pe-6 text-sm font-semibold"
@@ -208,6 +244,10 @@ const TemplateCard = ({
         >
           <DeleteOutlineRoundedIcon sx={{ fontSize: 18 }} />
         </button>
+      ) : null}
+
+      {family ? (
+        <LanguageToggle value={language} onChange={setLanguage} />
       ) : null}
     </li>
   );
@@ -239,11 +279,11 @@ const ScrollButton = ({
 
 const Group = ({
   title,
-  templates,
+  items,
   onSelect,
 }: {
   title: string;
-  templates: FormTemplate[];
+  items: GalleryItem[];
   onSelect: (template: FormTemplate) => void;
 }) => {
   const headingId = useId();
@@ -269,7 +309,7 @@ const Group = ({
     const observer = new ResizeObserver(updateEdges);
     observer.observe(element);
     return () => observer.disconnect();
-  }, [updateEdges, templates.length]);
+  }, [updateEdges, items.length]);
 
   /** About two cards at a time, smoothly unless the user asked for less motion. */
   const scrollRow = (direction: -1 | 1) => {
@@ -295,7 +335,7 @@ const Group = ({
         >
           {title}
           <span className="text-ink-muted/70 ms-1.5 font-normal normal-case">
-            {templates.length}
+            {items.length}
           </span>
         </h3>
         {overflows ? (
@@ -319,10 +359,10 @@ const Group = ({
         onScroll={updateEdges}
         className="-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pt-1 pb-3 sm:-mx-8 sm:scroll-px-8 sm:px-8"
       >
-        {templates.map((template, index) => (
+        {items.map((item, index) => (
           <TemplateCard
-            key={template.id}
-            template={template}
+            key={item.id}
+            item={item}
             index={index}
             onSelect={onSelect}
           />
@@ -362,22 +402,14 @@ export const TemplateGallery = ({ onSelect }: TemplateGalleryProps) => {
           Start from a template
         </h2>
         <p className="text-ink-muted text-sm">
-          Pick one to fill the canvas, then change anything you like.
+          Pick one to fill the canvas, in English or Persian, then change
+          anything you like.
         </p>
       </div>
       {custom.length > 0 ? (
-        <Group title="Your templates" templates={custom} onSelect={onSelect} />
+        <Group title="Your templates" items={custom} onSelect={onSelect} />
       ) : null}
-      <Group
-        title="Common templates"
-        templates={COMMON_TEMPLATES}
-        onSelect={onSelect}
-      />
-      <Group
-        title="Persian templates"
-        templates={PERSIAN_TEMPLATES}
-        onSelect={onSelect}
-      />
+      <Group title="Templates" items={TEMPLATE_FAMILIES} onSelect={onSelect} />
     </section>
   );
 };

@@ -24,7 +24,7 @@ Most form builders make you ship their renderer. Formia's output is **one `.tsx`
 - **Right-to-left forms** (Persian, Arabic, Hebrew): one toggle flips the preview and the generated code. The UI ships with the Vazirmatn font for Persian text.
 - Two fields per row; headings, dividers, alerts and areas take a full row. Buttons fill their row, and a submit button beside another element gets twice its width.
 - Per-field editor: label, name, default, options, custom placeholder (date and time fields), and validation with custom messages.
-- **Undo/redo** (100 steps), debounced **autosave** (also saved when the page is hidden or closed), 13 built-in **templates** (4 are multi-step or sectioned, in English and Persian) plus your own, validated JSON **import/export**.
+- **Undo/redo** (100 steps), debounced **autosave** (also saved when the page is hidden or closed), 11 built-in **templates** (2 are multi-step or sectioned), each in English or Persian, plus your own, validated JSON **import/export**.
 - **Live preview** with real validation, desktop/mobile widths and a simulated submit.
 - **Six code outputs**: React Hook Form + Zod, Formik + Yup, TanStack Form + Zod, each in Tailwind or MUI, with install commands for npm, pnpm, yarn and bun. Tabs, sections and direction are generated too.
 - **Installable and offline** (PWA): works with no network after the first visit, and asks before updating.
@@ -78,7 +78,7 @@ const { register, handleSubmit, formState: { errors, isSubmitting } } =
 - **Tab** and **Section** are palette items that create an empty area. Drop fields between its header and footer to put them inside; a field below the footer is outside. Deleting an area keeps its fields. A tab sits at the top level; a section sits at the top level or inside a tab.
 - On a tabbed form, every tab after the first has a back link at the top and a full-width Next at the bottom. **Next** checks the tab first, and a failed submit jumps to the first tab with an error. Set the button text on the Tab's editor.
 - The **LTR / RTL** toggle is in the canvas header. It is saved with the form and exported in the JSON.
-- Templates marked in Persian ("Persian templates" group) apply right-to-left on use.
+- Each template card has an EN / فا toggle; the Persian version applies right-to-left on use.
 
 ### Install and offline
 
@@ -152,7 +152,7 @@ Key techniques: per-icon imports (12,888 to 1,978 dev modules), vendor chunking 
 ## Extending
 
 - **New field type:** `types.ts`, `catalog.ts`, `palette_config.ts`, a `fieldSpec` kind, a case in `FieldControl.tsx`, and cases in both kits and the binding.
-- **New template:** add it to `templates.ts` (or `templatesStructured.ts` for tabs and sections, closing each area with `{ type: "end" }`); give it `direction: "rtl"` to land in the Persian group.
+- **New template:** add the English one to `templates.ts` and its Persian twin (same id plus `-fa`, `direction: "rtl"`) to `templatesBasicFa.ts`. Tabs and sections go in `templatesStructured.ts` as a family with both versions, closing each area with `{ type: "end" }`.
 - **New form library:** implement `Binding`, add its dependencies and schema printer in `generate.ts`.
 - **New UI kit:** add renderers in `codegen/kits/`.
 - **Validation changes** go in `fieldSpec.ts` / `zodPlan.ts` only, then re-check the generated output.
